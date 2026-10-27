@@ -3,6 +3,11 @@ import { fireEvent, render, screen } from '@testing-library/react-native';
 
 import { clearResetCooldown } from '@/features/auth/resetCooldown';
 
+import ForgotPasswordScreen from '@/app/(auth)/forgot-password';
+import LoginScreen from '@/app/(auth)/login';
+import RegisterScreen from '@/app/(auth)/register';
+import RequestSentScreen from '@/app/(auth)/request-sent';
+
 let mockParams: Record<string, string> = {};
 
 jest.mock('expo-router', () => ({
@@ -26,11 +31,6 @@ jest.mock('@/services/auth', () => ({
   register: (...args: unknown[]) => mockRegister(...args),
   requestPasswordReset: (...args: unknown[]) => mockReset(...args),
 }));
-
-import ForgotPasswordScreen from '@/app/(auth)/forgot-password';
-import LoginScreen from '@/app/(auth)/login';
-import RegisterScreen from '@/app/(auth)/register';
-import RequestSentScreen from '@/app/(auth)/request-sent';
 
 beforeEach(() => {
   jest.clearAllMocks();

@@ -1,11 +1,15 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, fireEvent, render, screen } from '@testing-library/react-native';
-import type { ReactElement } from 'react';
+import { act, fireEvent, screen } from '@testing-library/react-native';
+import { renderWithClient } from '../../test-utils/renderWithClient';
 
 import type { Profile } from '@/services/profile';
 import type { Recipe, SavedRecipe } from '@/services/recipes';
 import { useProfileStore } from '@/store/profile';
 import { useRecipeFiltersStore } from '@/store/recipeFilters';
+
+import HomeScreen from '@/app/(tabs)/home';
+import RecipesScreen from '@/app/(tabs)/recipes';
+import RecipeScreen from '@/app/recipe/[id]';
+import SavedScreen from '@/app/saved';
 
 let mockParams: Record<string, string> = {};
 jest.mock('expo-router', () => ({
@@ -41,11 +45,6 @@ jest.mock('@/services/recipes', () => ({
   unsaveRecipe: (...a: unknown[]) => mockUnsave(...a),
 }));
 
-import HomeScreen from '@/app/(tabs)/home';
-import RecipesScreen from '@/app/(tabs)/recipes';
-import RecipeScreen from '@/app/recipe/[id]';
-import SavedScreen from '@/app/saved';
-
 const recipe = (id: string, over: Partial<Recipe> = {}): Recipe => ({
   id,
   title: `Receita ${id}`,
@@ -79,16 +78,6 @@ const profile: Profile = {
   onboardingStep: 3,
   isPremium: false,
 };
-
-function renderWithClient(ui: ReactElement) {
-  const client = new QueryClient({
-    defaultOptions: {
-      queries: { retry: false, gcTime: Infinity },
-      mutations: { retry: false, gcTime: Infinity },
-    },
-  });
-  return render(<QueryClientProvider client={client}>{ui}</QueryClientProvider>);
-}
 
 beforeEach(() => {
   jest.clearAllMocks();

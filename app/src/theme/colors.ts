@@ -20,5 +20,3 @@ export const colors = {
   closeIcon: '#9F9F9F',
   mapUser: '#2F80ED',
 } as const;
-
-export type ColorToken = keyof typeof colors;

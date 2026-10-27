@@ -21,7 +21,7 @@ App mobile (Expo + TypeScript + Expo Router) do projeto Allivia — Etec de Tabo
 
 | Comando                              | O que faz                                                                             |
 | ------------------------------------ | ------------------------------------------------------------------------------------- |
-| `npm run lint`                       | ESLint (eslint-config-expo + Prettier)                                                |
+| `npm run lint`                       | ESLint em código, testes, scripts e configurações                                     |
 | `npm run typecheck`                  | Verificação de tipos (TypeScript estrito)                                             |
 | `npm test`                           | Testes (Jest + React Native Testing Library)                                          |
 | `npm run format`                     | Formata o código com Prettier                                                         |
@@ -43,3 +43,21 @@ Os arquivos SQL são executados no SQL Editor do Supabase:
   delete from public.recipes where title like '[TESTE]%';
   delete from public.restaurants where name like '[TESTE]%';
   ```
+
+## Expo Go no Windows
+
+O projeto usa o Expo SDK 58. Atualize o Expo Go no celular para uma versão compatível.
+
+No PowerShell, execute `npm.cmd install` e depois `npm.cmd start -- --clear`. O sufixo `.cmd` evita o bloqueio de scripts `npm.ps1` sem alterar a política do Windows.
+
+Mantenha computador e celular na mesma rede Wi-Fi e leia o QR code no terminal (no iPhone, use a Câmera). Se a rede bloquear a conexão local, use `npm.cmd start -- --tunnel`.
+
+Configure as variáveis públicas do Supabase em `.env` para login e acesso aos dados. Use `.env.example` como referência.
+
+## Validação antes de entregar
+
+- `npm run check`: verifica tipos, lint e executa todos os testes em sequência.
+- `npm run format:check`: confere a formatação sem alterar arquivos.
+- `npx expo export --platform web`: gera a versão web em `dist/`.
+
+Os testes com React Query compartilham `test-utils/renderWithClient.tsx`, que desativa tentativas automáticas e limpa os clientes ao final de cada teste.

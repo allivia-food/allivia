@@ -21,7 +21,7 @@ export default function LoginScreen() {
   const [touched, setTouched] = useState({ email: false, password: false });
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const passwordRef = useRef<TextInput>(null);
+  const passwordRef = useRef<React.ComponentRef<typeof TextInput>>(null);
 
   const emailError = validateEmailField(email);
   const passwordError = validateLoginPassword(password);

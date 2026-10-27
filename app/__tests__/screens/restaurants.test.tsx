@@ -1,12 +1,15 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
-import type { ReactElement } from 'react';
+import { fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { renderWithClient } from '../../test-utils/renderWithClient';
 import { Linking, StyleSheet } from 'react-native';
 
 import type { Restaurant } from '@/features/restaurants/rules';
 import type { Profile } from '@/services/profile';
 import { useLocationStore } from '@/store/location';
 import { useProfileStore } from '@/store/profile';
+
+import HomeScreen from '@/app/(tabs)/home';
+import RestaurantsScreen from '@/app/(tabs)/restaurants';
+import SavedScreen from '@/app/saved';
 
 jest.mock('expo-router', () => {
   const { useEffect } = jest.requireActual('react');
@@ -64,10 +67,6 @@ jest.mock('@/services/restaurants', () => ({
   unsaveRestaurant: (...a: unknown[]) => mockUnsave(...a),
 }));
 
-import HomeScreen from '@/app/(tabs)/home';
-import RestaurantsScreen from '@/app/(tabs)/restaurants';
-import SavedScreen from '@/app/saved';
-
 jest.mock('@/hooks/useRecipes', () => ({
   ...jest.requireActual('@/hooks/useRecipes'),
   useHomeRecipe: () => ({ isPending: false, isError: false, data: null }),
@@ -119,13 +118,6 @@ const HERE = {
   detail: 'Avenida Taboão, 305 — Taboão da Serra',
   source: 'device' as const,
 };
-
-function renderWithClient(ui: ReactElement) {
-  const client = new QueryClient({
-    defaultOptions: { queries: { retry: false, gcTime: Infinity } },
-  });
-  return render(<QueryClientProvider client={client}>{ui}</QueryClientProvider>);
-}
 
 const cardIds = () =>
   screen.queryAllByTestId(/^restaurant-r\d$/).map((e) => e.props.testID as string);
@@ -284,11 +276,7 @@ describe('Salvos e Home', () => {
     const view = await renderWithClient(<HomeScreen />);
     expect(screen.queryByTestId('home-restaurants')).toBeNull();
     useLocationStore.getState().setLocation(HERE);
-    view.rerender(
-      <QueryClientProvider client={new QueryClient()}>
-        <HomeScreen />
-      </QueryClientProvider>,
-    );
+    view.rerender(<HomeScreen />);
     expect(await screen.findByTestId('home-restaurants')).toBeTruthy();
     expect(screen.getByText('Cantinho Natural')).toBeTruthy();
     await fireEvent.press(screen.getByTestId('restaurant-r1'));

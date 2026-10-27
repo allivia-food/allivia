@@ -41,7 +41,11 @@
           "cameraPermission": "O Allivia usa a câmera para ler o código de barras dos produtos.",
           "recordAudioAndroid": false
         }
-      ]
+      ],
+      "expo-font",
+      "expo-image",
+      "expo-status-bar",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,

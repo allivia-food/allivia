@@ -8,12 +8,15 @@ export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{ headerShown: false }}
-      tabBar={({ state, navigation }) => {
+      tabBar={({ state, navigateToTab }) => {
         const current = state.routes[state.index]?.name ?? 'home';
         return (
           <TabBar
             active={isTabKey(current) ? current : 'home'}
-            onTabPress={(key) => navigation.navigate(key)}
+            onTabPress={(key) => {
+              const route = state.routes.find((route) => route.name === key);
+              if (route) navigateToTab(route.key);
+            }}
           />
         );
       }}

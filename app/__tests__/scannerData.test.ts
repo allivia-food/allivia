@@ -6,12 +6,6 @@ import {
   normalizeManualBarcode,
 } from '@/features/scanner/barcode';
 
-const mockFrom = jest.fn();
-jest.mock('@/services/supabase', () => ({
-  getSupabase: () => ({ from: mockFrom }),
-  isSupabaseConfigured: true,
-}));
-
 import {
   getProduct,
   isCacheFresh,
@@ -21,6 +15,12 @@ import {
   splitIngredients,
 } from '@/services/products';
 import { TimeoutError } from '@/utils/withTimeout';
+
+const mockFrom = jest.fn();
+jest.mock('@/services/supabase', () => ({
+  getSupabase: () => ({ from: mockFrom }),
+  isSupabaseConfigured: true,
+}));
 
 describe('check digit', () => {
   it.each([

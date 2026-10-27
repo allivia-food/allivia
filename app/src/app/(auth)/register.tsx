@@ -33,8 +33,8 @@ export default function RegisterScreen() {
     null,
   );
   const [loading, setLoading] = useState(false);
-  const passwordRef = useRef<TextInput>(null);
-  const confirmationRef = useRef<TextInput>(null);
+  const passwordRef = useRef<React.ComponentRef<typeof TextInput>>(null);
+  const confirmationRef = useRef<React.ComponentRef<typeof TextInput>>(null);
 
   const emailError = validateEmailField(email);
   const passwordError = validateNewPassword(password);

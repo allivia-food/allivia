@@ -4,6 +4,10 @@ import type { Profile } from '@/services/profile';
 import { useProfileStore } from '@/store/profile';
 import { useSessionStore } from '@/store/session';
 
+import Step1 from '@/app/(onboarding)/step-1';
+import Step2 from '@/app/(onboarding)/step-2';
+import Step3 from '@/app/(onboarding)/step-3';
+
 let mockParams: Record<string, string> = {};
 jest.mock('expo-router', () => ({
   router: { push: jest.fn(), replace: jest.fn(), back: jest.fn(), canGoBack: jest.fn(() => true) },
@@ -18,10 +22,6 @@ jest.mock('@/services/profile', () => ({
   saveOnboardingStep: (...a: unknown[]) => mockSaveStep(...a),
   completeOnboarding: (...a: unknown[]) => mockComplete(...a),
 }));
-
-import Step1 from '@/app/(onboarding)/step-1';
-import Step2 from '@/app/(onboarding)/step-2';
-import Step3 from '@/app/(onboarding)/step-3';
 
 const baseProfile: Profile = {
   id: 'u1',

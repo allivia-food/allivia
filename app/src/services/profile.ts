@@ -66,10 +66,6 @@ export async function getProfile(userId: string): Promise<Profile | null> {
   return data ? toProfile(data) : null;
 }
 
-export async function getOnboardingState(userId: string): Promise<OnboardingState | null> {
-  return onboardingStateOf(await getProfile(userId));
-}
-
 async function update(userId: string, values: Partial<ProfileRow>): Promise<Profile> {
   const { data, error } = await withTimeout(
     getSupabase()

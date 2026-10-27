@@ -1,5 +1,5 @@
-import { router, useNavigation } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { router, usePreventRemove } from 'expo-router';
+import { useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -29,7 +29,7 @@ const sameSet = (a: readonly string[], b: readonly string[]) =>
 export default function EditPreferencesScreen() {
   const profile = useProfileStore((s) => s.profile);
   const setProfile = useProfileStore((s) => s.setProfile);
-  const navigation = useNavigation();
+  const [allowLeave, setAllowLeave] = useState(false);
   const [allergies, setAllergies] = useState<AllergenId[]>(profile?.allergies ?? []);
   const [custom, setCustom] = useState<string[]>(profile?.customAllergies ?? []);
   const [prefs, setPrefs] = useState<PreferenceOption[]>(
@@ -45,21 +45,11 @@ export default function EditPreferencesScreen() {
     (!sameSet(allergies, profile.allergies) ||
       !sameSet(custom, profile.customAllergies) ||
       !sameSet(preferencesToSave(prefs), profile.preferences));
-  const dirtyRef = useRef(dirty);
-  useEffect(() => {
-    dirtyRef.current = dirty;
-  }, [dirty]);
 
-  useEffect(
-    () =>
-      navigation.addListener('beforeRemove', (e) => {
-        if (!dirtyRef.current) return;
-        e.preventDefault();
-        pendingLeave.current = () => navigation.dispatch(e.data.action);
-        setConfirmLeave(true);
-      }),
-    [navigation],
-  );
+  const disablePrevention = usePreventRemove(dirty && !allowLeave, ({ repeat }) => {
+    pendingLeave.current = repeat;
+    setConfirmLeave(true);
+  });
 
   if (!profile) return <ProfileMissing />;
   const current = profile;
@@ -76,7 +66,8 @@ export default function EditPreferencesScreen() {
         custom,
         preferencesToSave(prefs),
       );
-      dirtyRef.current = false;
+      setAllowLeave(true);
+      disablePrevention();
       setProfile(saved);
       await queryClient.invalidateQueries({ queryKey: ['recipes'] });
       router.back();
@@ -131,7 +122,7 @@ export default function EditPreferencesScreen() {
           variant="danger"
           onPress={() => {
             setConfirmLeave(false);
-            dirtyRef.current = false;
+            setAllowLeave(true);
             pendingLeave.current?.();
           }}
           testID="discard-confirm"

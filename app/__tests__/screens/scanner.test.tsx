@@ -1,10 +1,12 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen } from '@testing-library/react-native';
-import type { ReactElement } from 'react';
+import { fireEvent, screen } from '@testing-library/react-native';
+import { renderWithClient } from '../../test-utils/renderWithClient';
 
 import type { Product } from '@/features/scanner/analyzeProduct';
 import type { Profile } from '@/services/profile';
 import { useProfileStore } from '@/store/profile';
+
+import ScannerScreen from '@/app/(tabs)/scanner';
+import ScannerResultScreen from '@/app/scanner-result';
 
 let mockParams: Record<string, string> = {};
 jest.mock('expo-router', () => {
@@ -51,9 +53,6 @@ jest.mock('@/services/products', () => ({
   recordScan: (...a: unknown[]) => mockRecordScan(...a),
 }));
 
-import ScannerScreen from '@/app/(tabs)/scanner';
-import ScannerResultScreen from '@/app/scanner-result';
-
 const profile: Profile = {
   id: 'u1',
   email: 'ana@exemplo.com',
@@ -79,13 +78,6 @@ const product = (over: Partial<Product> = {}): Product => ({
   source: 'test',
   ...over,
 });
-
-function renderWithClient(ui: ReactElement) {
-  const client = new QueryClient({
-    defaultOptions: { queries: { retry: false, gcTime: Infinity } },
-  });
-  return render(<QueryClientProvider client={client}>{ui}</QueryClientProvider>);
-}
 
 beforeEach(() => {
   jest.clearAllMocks();

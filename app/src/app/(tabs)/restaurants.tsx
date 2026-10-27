@@ -152,7 +152,7 @@ export default function RestaurantsScreen() {
                         title={t.approximate}
                         testID="restaurants-approximate"
                       />
-                    ) : null
+                    ) : undefined
                   }
                   ListEmptyComponent={<StateView variant="empty" message={t.noResults} />}
                   onScrollToIndexFailed={({ index, averageItemLength }) =>

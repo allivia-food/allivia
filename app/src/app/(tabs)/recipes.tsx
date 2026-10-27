@@ -144,7 +144,7 @@ export default function RecipesScreen() {
         data={body ? [] : rest}
         keyExtractor={(item) => item.id}
         ListHeaderComponent={header}
-        ListEmptyComponent={body ? <View style={styles.state}>{body}</View> : null}
+        ListEmptyComponent={body ? <View style={styles.state}>{body}</View> : undefined}
         renderItem={({ item }) => (
           <View style={styles.item}>
             <RecipeRowCard recipe={item} onPress={() => open(item)} onSaveError={setToast} />
@@ -157,7 +157,7 @@ export default function RecipesScreen() {
         ListFooterComponent={
           query.isFetchingNextPage ? (
             <ActivityIndicator color={colors.primary} style={styles.footer} />
-          ) : null
+          ) : undefined
         }
         refreshControl={
           <RefreshControl

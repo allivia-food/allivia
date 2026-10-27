@@ -20,5 +20,3 @@ export function loadEnv() {
       ]),
   );
 }
-
-export const resultsDir = join(appDir, 'scripts', 'poc', 'resultados');

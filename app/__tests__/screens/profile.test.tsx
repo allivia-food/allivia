@@ -4,6 +4,8 @@ import { fireEvent, render, screen } from '@testing-library/react-native';
 import type { Profile } from '@/services/profile';
 import { useProfileStore } from '@/store/profile';
 
+import ProfileScreen from '@/app/(tabs)/profile';
+
 jest.mock('expo-router', () => ({
   router: { push: jest.fn(), replace: jest.fn(), back: jest.fn(), canGoBack: jest.fn(() => true) },
   useLocalSearchParams: () => ({}),
@@ -27,8 +29,6 @@ jest.mock('@/services/auth', () => ({
   changePassword: (...a: unknown[]) => mockChangePassword(...a),
   logout: (...a: unknown[]) => mockLogout(...a),
 }));
-
-import ProfileScreen from '@/app/(tabs)/profile';
 
 const profile: Profile = {
   id: 'u1',

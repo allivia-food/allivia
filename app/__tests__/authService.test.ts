@@ -5,6 +5,8 @@ import {
   resetCooldownLeft,
 } from '@/features/auth/resetCooldown';
 
+import { ensureProfile, login, register, requestPasswordReset } from '@/services/auth';
+
 const mockSignUp = jest.fn();
 const mockSignIn = jest.fn();
 const mockReset = jest.fn();
@@ -22,8 +24,6 @@ jest.mock('@/services/supabase', () => ({
   }),
   isSupabaseConfigured: true,
 }));
-
-import { ensureProfile, login, register, requestPasswordReset } from '@/services/auth';
 
 const user = (metadata: Record<string, unknown>) => ({
   id: 'user-1',

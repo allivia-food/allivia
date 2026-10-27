@@ -13,7 +13,7 @@ export interface InputProps extends Omit<TextInputProps, 'style' | 'editable'> {
   onPrimary?: boolean;
   disabled?: boolean;
   secure?: boolean;
-  ref?: Ref<TextInput>;
+  ref?: Ref<React.ComponentRef<typeof TextInput>>;
 }
 
 export function Input({

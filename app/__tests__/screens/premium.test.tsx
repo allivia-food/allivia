@@ -1,9 +1,12 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, fireEvent, render, screen } from '@testing-library/react-native';
-import type { ReactElement } from 'react';
+import { act, fireEvent, screen } from '@testing-library/react-native';
+import { renderWithClient } from '../../test-utils/renderWithClient';
 
 import type { Profile } from '@/services/profile';
 import { useProfileStore } from '@/store/profile';
+
+import CheckoutScreen from '@/app/checkout';
+import PremiumUnlockedScreen from '@/app/premium-unlocked';
+import ScannerScreen from '@/app/(tabs)/scanner';
 
 let mockParams: Record<string, string> = {};
 jest.mock('expo-router', () => {
@@ -67,10 +70,6 @@ jest.mock('@/services/supabase', () => ({
   }),
 }));
 
-import CheckoutScreen from '@/app/checkout';
-import PremiumUnlockedScreen from '@/app/premium-unlocked';
-import ScannerScreen from '@/app/(tabs)/scanner';
-
 const base: Profile = {
   id: 'u1',
   email: 'ana@exemplo.com',
@@ -83,13 +82,6 @@ const base: Profile = {
   isPremium: false,
   subscription: null,
 };
-
-function renderWithClient(ui: ReactElement) {
-  const client = new QueryClient({
-    defaultOptions: { queries: { retry: false, gcTime: Infinity } },
-  });
-  return render(<QueryClientProvider client={client}>{ui}</QueryClientProvider>);
-}
 
 async function fillCard(number: string, expiry = '1228', cvv = '987') {
   await fireEvent.changeText(screen.getByTestId('card-number'), number);

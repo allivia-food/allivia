@@ -62,14 +62,6 @@ export async function getDeviceLocation(fallbackLabel: string): Promise<ChosenLo
   return { ...point, ...(await describe(point, fallbackLabel)), source: 'device' };
 }
 
-export async function hasLocationPermission(): Promise<boolean> {
-  try {
-    return (await Location.getForegroundPermissionsAsync()).granted;
-  } catch {
-    return false;
-  }
-}
-
 export async function findAddress(text: string): Promise<ChosenLocation | null> {
   if (!canSearchAddress) throw new LocationError('unsupported');
   const query = text.trim();

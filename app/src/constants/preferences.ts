@@ -6,5 +6,3 @@ export const PREFERENCES: readonly { id: PreferenceId; label: string }[] = [
   { id: 'vegetarian', label: 'Vegetariano' },
   { id: 'vegan', label: 'Vegano' },
 ];
-
-export const NO_PREFERENCE_LABEL = 'Nenhuma';
