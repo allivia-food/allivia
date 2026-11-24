@@ -1,5 +1,5 @@
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -9,7 +9,8 @@ import { RestaurantCard } from '@/components/restaurants/RestaurantCard';
 import { RestaurantDetail } from '@/components/restaurants/RestaurantDetail';
 import { RestaurantMap } from '@/components/restaurants/RestaurantMap';
 import { SearchPill } from '@/components/restaurants/SearchPill';
-import { Banner, BottomSheet, Icon, StateView, Toast } from '@/components/ui';
+import { Banner, BottomSheet, Chip, HeaderLogo, Icon, StateView, Toast } from '@/components/ui';
+import { PREFERENCES, type PreferenceId } from '@/constants/preferences';
 import { strings } from '@/constants/strings';
 import { authErrorKind } from '@/features/auth/authErrors';
 import { getDeviceLocation } from '@/features/restaurants/location';
@@ -37,39 +38,59 @@ export default function RestaurantsScreen() {
 
   const [search, setSearch] = useState('');
   const debounced = useDebouncedValue(search, SEARCH_DEBOUNCE_MS);
+  const preferenceKey = [profile?.id, ...(profile?.preferences ?? [])].join('|');
+  const [dietOverride, setDietOverride] = useState<{ key: string; values: PreferenceId[] } | null>(
+    null,
+  );
+  const diets = useMemo(
+    () =>
+      dietOverride?.key === preferenceKey ? dietOverride.values : (profile?.preferences ?? []),
+    [dietOverride, preferenceKey, profile?.preferences],
+  );
   const [cuisine, setCuisine] = useState<CuisineFilter>('all');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detail, setDetail] = useState<RankedRestaurant | null>(null);
+  const [pendingDetail, setPendingDetail] = useState<RankedRestaurant | null>(null);
+  const [centeredId, setCenteredId] = useState<string | null>(null);
   const [sheet, setSheet] = useState<{ message: string | null } | null>(null);
-  const [locating, setLocating] = useState(false);
+
   const [toast, setToast] = useState<string | null>(null);
   const list = useRef<FlatList<RankedRestaurant>>(null);
   const asked = useRef(false);
+
+  useEffect(() => {
+    if (!pendingDetail || (location && centeredId !== pendingDetail.restaurant.id)) return;
+    const timer = setTimeout(() => {
+      setDetail(pendingDetail);
+      setPendingDetail(null);
+    }, 5_000);
+    return () => clearTimeout(timer);
+  }, [pendingDetail, centeredId, location]);
+
+  useFocusEffect(useCallback(() => () => setPendingDetail(null), []));
 
   useFocusEffect(
     useCallback(() => {
       if (location || asked.current) return;
       asked.current = true;
       void (async () => {
-        setLocating(true);
         try {
           setLocation(await getDeviceLocation(t.location.currentFallback));
         } catch (error) {
           setSheet({ message: messageFor(error) });
-        } finally {
-          setLocating(false);
         }
       })();
     }, [location, setLocation]),
   );
 
   const items = useMemo(
-    () => filterRestaurants(ranked.items, debounced, cuisine, t.categories),
-    [ranked.items, debounced, cuisine],
+    () => filterRestaurants(ranked.items, debounced, cuisine, t.categories, diets),
+    [ranked.items, debounced, cuisine, diets],
   );
   const hasAllergies = (profile?.allergies.length ?? 0) > 0;
 
   function selectFromMap(id: string) {
+    setPendingDetail(null);
     setSelectedId(id);
     const index = items.findIndex((i) => i.restaurant.id === id);
     if (index >= 0) list.current?.scrollToIndex({ index, animated: true, viewPosition: 0 });
@@ -77,15 +98,19 @@ export default function RestaurantsScreen() {
 
   function openDetail(item: RankedRestaurant) {
     setSelectedId(item.restaurant.id);
-    setDetail(item);
+    setDetail(null);
+    setPendingDetail(item);
   }
 
   return (
     <View style={styles.screen}>
       <View style={[styles.header, { paddingTop: insets.top + spacing.lg }]}>
-        <Text style={typography.screenTitle} accessibilityRole="header">
-          {t.title}
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+          <Text style={[typography.screenTitle, { flex: 1 }]} accessibilityRole="header">
+            {t.title}
+          </Text>
+          <HeaderLogo />
+        </View>
         <Pressable
           onPress={() => setSheet({ message: null })}
           accessibilityRole="button"
@@ -93,7 +118,7 @@ export default function RestaurantsScreen() {
           style={({ pressed }) => [styles.address, pressed && styles.pressed]}
           testID="address-row"
         >
-          <Text style={typography.sectionTitle} numberOfLines={1}>
+          <Text style={[typography.sectionTitle, { flexShrink: 1 }]} numberOfLines={1}>
             {location?.label ?? t.chooseAddress}
           </Text>
           <Icon name="chevronDown" size={r.chevronSize} color={colors.textPrimary} />
@@ -106,73 +131,79 @@ export default function RestaurantsScreen() {
           testID="restaurants-search"
         />
         <CategoryFilter value={cuisine} onChange={setCuisine} />
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+          {PREFERENCES.map((p) => (
+            <Chip
+              key={p.id}
+              label={p.label}
+              variant="filter"
+              active={diets.includes(p.id)}
+              onPress={() =>
+                setDietOverride({
+                  key: preferenceKey,
+                  values: diets.includes(p.id) ? diets.filter((d) => d !== p.id) : [...diets, p.id],
+                })
+              }
+            />
+          ))}
+        </View>
       </View>
 
       <View style={styles.body}>
-        {!location ? (
-          locating ? (
-            <StateView variant="loading" message={t.location.locating} />
-          ) : (
+        {location ? (
+          <RestaurantMap
+            origin={location}
+            items={items}
+            selectedId={selectedId}
+            onSelect={selectFromMap}
+            onCentered={setCenteredId}
+          />
+        ) : null}
+        <BottomSheet minHeight={r.sheetMin} maxHeight={r.sheetMax}>
+          <Text style={[typography.sectionTitle, styles.sheetTitle]}>
+            {location ? t.nearYou : t.title}
+          </Text>
+          {query.isPending ? (
+            <StateView variant="loading" />
+          ) : query.isError ? (
             <StateView
-              variant="empty"
-              message={t.needLocation}
-              actionLabel={t.chooseAddress}
-              onAction={() => setSheet({ message: null })}
+              variant={authErrorKind(query.error) === 'network' ? 'offline' : 'error'}
+              onRetry={() => void query.refetch()}
             />
-          )
-        ) : (
-          <>
-            <RestaurantMap
-              origin={location}
-              items={items}
-              selectedId={selectedId}
-              onSelect={selectFromMap}
-            />
-            <BottomSheet minHeight={r.sheetMin} maxHeight={r.sheetMax}>
-              <Text style={[typography.sectionTitle, styles.sheetTitle]}>{t.nearYou}</Text>
-              {query.isPending ? (
-                <StateView variant="loading" />
-              ) : query.isError ? (
-                <StateView
-                  variant={authErrorKind(query.error) === 'network' ? 'offline' : 'error'}
-                  onRetry={() => void query.refetch()}
-                />
-              ) : ranked.items.length === 0 ? (
-                <StateView variant="empty" message={t.empty} />
-              ) : (
-                <FlatList
-                  ref={list}
-                  data={items}
-                  keyExtractor={(i) => i.restaurant.id}
-                  contentContainerStyle={styles.list}
-                  ListHeaderComponent={
-                    ranked.approximate ? (
-                      <Banner
-                        variant="warning"
-                        title={t.approximate}
-                        testID="restaurants-approximate"
-                      />
-                    ) : undefined
-                  }
-                  ListEmptyComponent={<StateView variant="empty" message={t.noResults} />}
-                  onScrollToIndexFailed={({ index, averageItemLength }) =>
-                    list.current?.scrollToOffset({ offset: index * averageItemLength })
-                  }
-                  renderItem={({ item }) => (
-                    <RestaurantCard
-                      item={item}
-                      hasAllergies={hasAllergies}
-                      selected={item.restaurant.id === selectedId}
-                      onPress={() => openDetail(item)}
-                      onSaveError={setToast}
-                    />
-                  )}
-                  testID="restaurants-list"
+          ) : ranked.items.length === 0 ? (
+            <StateView variant="empty" message={t.empty} />
+          ) : (
+            <FlatList
+              ref={list}
+              data={items}
+              keyExtractor={(i) => i.restaurant.id}
+              contentContainerStyle={styles.list}
+              ListHeaderComponent={
+                ranked.approximate ? (
+                  <Banner
+                    variant="warning"
+                    title={t.approximate}
+                    testID="restaurants-approximate"
+                  />
+                ) : undefined
+              }
+              ListEmptyComponent={<StateView variant="empty" message={t.noResults} />}
+              onScrollToIndexFailed={({ index, averageItemLength }) =>
+                list.current?.scrollToOffset({ offset: index * averageItemLength })
+              }
+              renderItem={({ item }) => (
+                <RestaurantCard
+                  item={item}
+                  hasAllergies={hasAllergies}
+                  selected={item.restaurant.id === selectedId}
+                  onPress={() => openDetail(item)}
+                  onSaveError={setToast}
                 />
               )}
-            </BottomSheet>
-          </>
-        )}
+              testID="restaurants-list"
+            />
+          )}
+        </BottomSheet>
       </View>
 
       {sheet ? (
@@ -183,6 +214,8 @@ export default function RestaurantsScreen() {
           onChoose={(chosen) => {
             setLocation(chosen);
             setSelectedId(null);
+            setPendingDetail(null);
+            setCenteredId(null);
             setSheet(null);
           }}
         />

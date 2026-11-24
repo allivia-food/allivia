@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { spacing, typography } from '@/theme';
+import { HeaderLogo } from './HeaderLogo';
 
 export interface LargeTitleHeaderProps {
   title: string;
@@ -20,7 +21,7 @@ export function LargeTitleHeader({ title, subtitle, right }: LargeTitleHeaderPro
         </Text>
         {subtitle ? <Text style={typography.subtitle}>{subtitle}</Text> : null}
       </View>
-      {right}
+      {right ?? <HeaderLogo />}
     </View>
   );
 }

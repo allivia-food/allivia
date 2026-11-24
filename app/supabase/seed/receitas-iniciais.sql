@@ -39,15 +39,6 @@ values
  'Para gratinar sem queijo, pincele um pouco de azeite sobre o purê antes de levar ao forno.',
  false, false, false),
 
-('Frango com legumes',
- 'Simples, nutritivo e cheio de cor.',
- '{lunch,dinner}', 30, 2,
- '{"1 colher de sopa de azeite de oliva","400 g de peito de frango em cubos","1/2 xícara de cenoura e batata em cubos pequenos","1/2 xícara de vagem em pedaços pequenos","1/2 xícara de pimentão vermelho e amarelo em cubos pequenos","1/2 xícara de couve-flor ou brócolis em buquês pequenos","2 folhas de repolho verde picadas grosseiramente","2 xícaras de água fervente","1 colher de sopa de cheiro-verde picado","Sal a gosto"}',
- '{"Em uma panela, aqueça metade do azeite em fogo alto. Junte o frango, tempere com sal e frite por 5 minutos, até dourar. Retire e reserve.","Na mesma panela, aqueça o azeite restante e refogue a cenoura, a batata, a vagem, os pimentões, a couve-flor ou o brócolis e o repolho até murcharem levemente.","Volte o frango à panela, junte a água fervente e misture.","Cozinhe em fogo médio por 10 minutos, até os legumes ficarem macios.","Desligue o fogo, polvilhe o cheiro-verde e sirva."}',
- '{}', '{lactose_free,gluten_free}',
- 'Você pode variar os legumes de acordo com sua preferência e o que tiver disponível em casa!',
- false, false, true),
-
 ('Moqueca capixaba de peixe',
  'Moqueca tradicional do Espírito Santo, feita sem leite de coco.',
  '{lunch,dinner}', 40, 4,

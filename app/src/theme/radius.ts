@@ -7,5 +7,4 @@ export const radius = {
   modal: 20,
   progress: 10,
   panel: 15,
-  cardField: 5,
 } as const;

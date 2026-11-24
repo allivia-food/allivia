@@ -44,7 +44,9 @@ export function CategoryFilter({ value, onChange }: CategoryFilterProps) {
                 color={selected ? colors.textOnPrimary : colors.textSecondary}
               />
             </View>
-            <Text style={typography.categoryLabel}>{label}</Text>
+            <Text style={[typography.categoryLabel, styles.label]} maxFontSizeMultiplier={1.2}>
+              {label}
+            </Text>
           </Pressable>
         );
       })}
@@ -54,7 +56,8 @@ export function CategoryFilter({ value, onChange }: CategoryFilterProps) {
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', justifyContent: 'space-between' },
-  item: { alignItems: 'center', gap: spacing.xs },
+  item: { flex: 1, minWidth: 0, alignItems: 'center', gap: spacing.xs },
+  label: { textAlign: 'center', flexShrink: 1 },
   pressed: { opacity: opacity.pressed },
   circle: {
     width: r.categoryCircle,

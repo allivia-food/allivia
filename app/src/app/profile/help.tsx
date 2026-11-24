@@ -10,7 +10,7 @@ const t = strings.help;
 
 export default function HelpScreen() {
   return (
-    <TextScreen title={t.title} icon="help" iconTone="green" paragraphs={[]}>
+    <TextScreen title={t.title} icon="help" iconTone="transparent" paragraphs={[]}>
       <Text style={typography.sectionTitle}>{HELP_TITLE}</Text>
       {HELP_TEXT.map((p) => (
         <Text key={p} style={typography.subtitle}>

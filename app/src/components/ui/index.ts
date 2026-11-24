@@ -6,6 +6,7 @@ export { Checkbox } from './Checkbox';
 export { Chip, type ChipVariant } from './Chip';
 export { ChipGroup } from './ChipGroup';
 export { Icon } from './Icon';
+export { HeaderLogo } from './HeaderLogo';
 export { IconBadge } from './IconBadge';
 export { IconButton } from './IconButton';
 export { Input } from './Input';

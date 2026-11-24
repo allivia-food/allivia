@@ -83,15 +83,6 @@ const base: Profile = {
   subscription: null,
 };
 
-async function fillCard(number: string, expiry = '1228', cvv = '987') {
-  await fireEvent.changeText(screen.getByTestId('card-number'), number);
-  await fireEvent(screen.getByTestId('card-number'), 'blur');
-  await fireEvent.changeText(screen.getByTestId('card-expiry'), expiry);
-  await fireEvent(screen.getByTestId('card-expiry'), 'blur');
-  await fireEvent.changeText(screen.getByTestId('card-cvv'), cvv);
-  await fireEvent(screen.getByTestId('card-cvv'), 'blur');
-}
-
 async function confirmAndWait() {
   await fireEvent.press(screen.getByTestId('payment-confirm'));
   await act(async () => {
@@ -133,11 +124,12 @@ describe('Aba Scanner com o premium', () => {
     });
   });
 
-  it('premium goes straight to the camera', async () => {
+  it('premium opens history and can start scanning', async () => {
     useProfileStore.getState().setProfile({ ...base, isPremium: true });
     await renderWithClient(<ScannerScreen />);
-    expect(screen.getByTestId('camera')).toBeTruthy();
     expect(screen.queryByTestId('premium-plan')).toBeNull();
+    await fireEvent.press(screen.getByText('Escanear alimento'));
+    expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/scanner-camera' });
   });
 });
 
@@ -158,36 +150,16 @@ describe('Pagamento (simulado)', () => {
     expect(screen.queryByText('Seus dados estão seguros conosco.')).toBeNull();
   });
 
-  it('confirm is only enabled with the three fields valid; errors show after leaving a field', async () => {
+  it('confirms without collecting card details', async () => {
     await renderWithClient(<CheckoutScreen />);
-    expect(screen.getByText('Plano Anual - Scanner Allivia')).toBeTruthy();
-    expect(isDisabled('payment-confirm')).toBe(true);
-    await fillCard('4111 1111 1111 1112', '0926', '12');
-    expect(screen.getByText('Número de cartão inválido.')).toBeTruthy();
-    expect(screen.getByText('Validade inválida.')).toBeTruthy();
-    expect(screen.getByText('CVV inválido.')).toBeTruthy();
-    expect(isDisabled('payment-confirm')).toBe(true);
-    await fillCard('4111111111111111');
-    expect(screen.getByTestId('card-number').props.value).toBe('4111 1111 1111 1111');
-    expect(screen.getByTestId('card-expiry').props.value).toBe('12/28');
-    expect(screen.getByTestId('card-cvv').props.secureTextEntry).toBe(true);
-    expect(screen.getByTestId('card-cvv').props.autoComplete).toBe('off');
+    expect(screen.queryByTestId('card-number')).toBeNull();
+    expect(screen.queryByTestId('card-expiry')).toBeNull();
+    expect(screen.queryByTestId('card-cvv')).toBeNull();
     expect(isDisabled('payment-confirm')).toBe(false);
-  });
-
-  it('the test card is declined: message, data kept, nothing written', async () => {
-    await renderWithClient(<CheckoutScreen />);
-    await fillCard('4000 0000 0000 0002');
-    await confirmAndWait();
-    expect(screen.getByText('Pagamento recusado (simulação). Tente outro cartão.')).toBeTruthy();
-    expect(screen.getByTestId('card-number').props.value).toBe('4000 0000 0000 0002');
-    expect(mockUpdate).not.toHaveBeenCalled();
-    expect(mockRouter.replace).not.toHaveBeenCalled();
   });
 
   it('approved: one write with the simulated subscription and no card data', async () => {
     await renderWithClient(<CheckoutScreen />);
-    await fillCard('4111 1111 1111 1111', '1228', '987');
     await confirmAndWait();
     expect(mockUpdate).toHaveBeenCalledTimes(1);
     const [table, values] = mockUpdate.mock.calls[0];
@@ -207,13 +179,13 @@ describe('Pagamento (simulado)', () => {
     expect(JSON.stringify(mockRouter.replace.mock.calls)).not.toContain('4111');
   });
 
-  it('Pix and boleto hide the card fields and approve', async () => {
+  it('Pix and debit confirm without collecting card details', async () => {
     await renderWithClient(<CheckoutScreen />);
     await fireEvent.press(screen.getByTestId('method-pix'));
     expect(screen.queryByTestId('card-fields')).toBeNull();
     expect(screen.getByText('Ambiente de demonstração: a confirmação será simulada.')).toBeTruthy();
     expect(isDisabled('payment-confirm')).toBe(false);
-    await fireEvent.press(screen.getByTestId('method-boleto'));
+    await fireEvent.press(screen.getByTestId('method-debit'));
     await confirmAndWait();
     expect(mockUpdate).toHaveBeenCalledTimes(1);
     expect(mockRouter.replace).toHaveBeenCalledWith('/premium-unlocked');

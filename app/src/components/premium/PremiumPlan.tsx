@@ -29,7 +29,12 @@ export function PremiumPlan() {
         contentFit="cover"
         accessible={false}
       />
-      <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + spacing.lg }]}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.content,
+          { paddingTop: insets.top + spacing.lg, paddingBottom: insets.bottom + spacing.xxl },
+        ]}
+      >
         <View style={styles.header}>
           <Text style={[typography.screenTitle, styles.flex]} accessibilityRole="header">
             {t.title}

@@ -180,6 +180,26 @@ describe('search and category', () => {
 });
 
 describe('card text and route', () => {
+  it('keeps a restaurant without coordinates without inventing distance', () => {
+    const restaurant: Restaurant = { ...make('unmapped', 0, []), lat: null, lng: null };
+    expect(rankRestaurants([restaurant], [], origin).items[0].distance).toBeNull();
+    expect(routeUrl(restaurant)).toContain('destination=Rua%20X%2C%201');
+  });
+
+  it('requires every selected preference and searches the address', () => {
+    const restaurant: Restaurant = {
+      ...make('vegan', 0, []),
+      diets: ['vegan', 'vegetarian', 'lactose_free'],
+      address: 'Rua São José',
+    };
+    const { items } = rankRestaurants([restaurant], [], null);
+    const labels = { healthy: '', vegetarian: '', snacks: '', other: '' };
+    expect(
+      filterRestaurants(items, 'sao jose', 'all', labels, ['vegan', 'lactose_free']),
+    ).toHaveLength(1);
+    expect(filterRestaurants(items, '', 'all', labels, ['vegan', 'gluten_free'])).toHaveLength(0);
+  });
+
   it('cites at most 2 allergens + "e mais N"', () => {
     expect(allergenFreeText([])).toBe('');
     expect(allergenFreeText(['gluten'])).toBe('Opções sem glúten');

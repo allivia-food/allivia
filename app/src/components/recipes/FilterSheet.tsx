@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import {
   Modal as NativeModal,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -48,8 +50,12 @@ export function FilterSheet({ filters, profilePreferences, onApply, onClose }: F
       animationType="fade"
       onRequestClose={onClose}
       statusBarTranslucent
+      navigationBarTranslucent
     >
-      <View style={styles.overlay}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={[styles.overlay, { paddingTop: insets.top }]}
+      >
         <Pressable
           style={StyleSheet.absoluteFill}
           onPress={onClose}
@@ -163,7 +169,7 @@ export function FilterSheet({ filters, profilePreferences, onApply, onClose }: F
             </View>
           </ScrollView>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </NativeModal>
   );
 }
@@ -224,6 +230,7 @@ function IngredientField({ label, icon, values, onChange, testID }: IngredientFi
           returnKeyType="done"
           onSubmitEditing={add}
           maxLength={40}
+          maxFontSizeMultiplier={Platform.OS === 'android' ? 1.3 : undefined}
           accessibilityLabel={label}
           testID={`${testID}-input`}
         />
@@ -284,7 +291,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.progress,
     backgroundColor: colors.textPlaceholder,
   },
-  input: { flex: 1, ...typography.bodySmall, outlineWidth: 0 },
+  input: { flex: 1, minWidth: 0, paddingVertical: spacing.sm, ...typography.body, outlineWidth: 0 },
   error: { ...typography.fieldError },
   termChip: {
     minHeight: sizes.chipHeight,

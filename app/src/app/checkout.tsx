@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { CardField } from '@/components/premium/CardField';
 import { DemoNotice } from '@/components/premium/DemoNotice';
 import { OptionCard } from '@/components/premium/OptionCard';
 import { Banner, Button, Icon, ScreenHeader } from '@/components/ui';
@@ -12,17 +11,7 @@ import type { IconName } from '@/constants/icons';
 import { images } from '@/constants/icons';
 import { strings } from '@/constants/strings';
 import { authErrorKind } from '@/features/auth/authErrors';
-import {
-  cardErrors,
-  cvvLength,
-  formatCardNumber,
-  formatExpiry,
-  isCardValid,
-  onlyDigits,
-  simulatePayment,
-  type PaymentMethod,
-} from '@/features/premium/card';
-import { DEFAULT_PLAN, isPlanId } from '@/features/premium/plans';
+import { DEFAULT_PLAN, isPlanId, type PaymentMethod } from '@/features/premium/plans';
 import { subscribeSimulated } from '@/services/subscription';
 import { useProfileStore } from '@/store/profile';
 import { colors, layout, opacity, radius, shadows, sizes, spacing, typography } from '@/theme';
@@ -31,11 +20,8 @@ const t = strings.payment;
 const METHODS: { id: PaymentMethod; icon: IconName }[] = [
   { id: 'card', icon: 'creditCard' },
   { id: 'pix', icon: 'pix' },
-  { id: 'boleto', icon: 'boleto' },
+  { id: 'debit', icon: 'creditCard' },
 ];
-const EMPTY_CARD = { number: '', expiry: '', cvv: '' };
-const NOT_TOUCHED = { number: false, expiry: false, cvv: false };
-
 export default function CheckoutScreen() {
   const params = useLocalSearchParams<{ plan?: string }>();
   const plan = isPlanId(params.plan) ? params.plan : DEFAULT_PLAN;
@@ -43,8 +29,6 @@ export default function CheckoutScreen() {
   const setProfile = useProfileStore((s) => s.setProfile);
 
   const [method, setMethod] = useState<PaymentMethod>('card');
-  const [card, setCard] = useState(EMPTY_CARD);
-  const [touched, setTouched] = useState(NOT_TOUCHED);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const mounted = useRef(true);
@@ -56,30 +40,16 @@ export default function CheckoutScreen() {
     };
   }, []);
 
-  const invalid = cardErrors(card);
-  const canConfirm = method !== 'card' || isCardValid(card);
   const planText = strings.premium.plans[plan];
-
-  const edit = (field: keyof typeof card, value: string) => {
-    setCard((c) => ({ ...c, [field]: value }));
-    setError(null);
-  };
-  const blur = (field: keyof typeof touched) => setTouched((v) => ({ ...v, [field]: true }));
-
   async function confirm() {
-    if (!canConfirm || processing || !profile) return;
+    if (processing || !profile) return;
     setProcessing(true);
     setError(null);
     await new Promise((resolve) => setTimeout(resolve, layout.premium.processingMs));
     if (!mounted.current) return;
-    if (simulatePayment(method, card.number) === 'declined') {
-      setProcessing(false);
-      setError(t.errors.declined);
-      return;
-    }
     try {
       const updated = await subscribeSimulated(profile.id, plan);
-      setCard(EMPTY_CARD);
+
       setProfile(updated);
       router.replace('/premium-unlocked');
     } catch (e) {
@@ -133,51 +103,7 @@ export default function CheckoutScreen() {
             ))}
           </View>
 
-          {method === 'card' ? (
-            <View style={styles.cardSection} testID="card-fields">
-              <Text style={typography.sectionTitleAccent}>{t.cardData}</Text>
-              <CardField
-                label={t.number}
-                placeholder={t.numberPlaceholder}
-                value={card.number}
-                onChangeText={(v) => edit('number', formatCardNumber(v))}
-                onBlur={() => blur('number')}
-                keyboardType="number-pad"
-                rightIcon="creditCard"
-                error={touched.number && invalid.number ? t.errors.number : undefined}
-                testID="card-number"
-              />
-              <View style={styles.row}>
-                <CardField
-                  label={t.expiry}
-                  placeholder={t.expiryPlaceholder}
-                  value={card.expiry}
-                  onChangeText={(v) => edit('expiry', formatExpiry(v))}
-                  onBlur={() => blur('expiry')}
-                  keyboardType="number-pad"
-                  maxLength={5}
-                  error={touched.expiry && invalid.expiry ? t.errors.expiry : undefined}
-                  testID="card-expiry"
-                />
-                <CardField
-                  label={t.cvv}
-                  placeholder={t.cvvPlaceholder}
-                  value={card.cvv}
-                  onChangeText={(v) => edit('cvv', onlyDigits(v).slice(0, cvvLength(card.number)))}
-                  onBlur={() => blur('cvv')}
-                  keyboardType="number-pad"
-                  secureTextEntry
-                  error={touched.cvv && invalid.cvv ? t.errors.cvv : undefined}
-                  testID="card-cvv"
-                />
-              </View>
-            </View>
-          ) : (
-            <Text style={[typography.bodySmall, styles.center]} testID="simulated-only">
-              {t.simulatedOnly}
-            </Text>
-          )}
-
+          <Text style={typography.bodySmall}>{t.simulatedOnly}</Text>
           {error ? <Banner variant="error" title={error} testID="payment-error" /> : null}
 
           <View style={styles.footer}>
@@ -190,7 +116,6 @@ export default function CheckoutScreen() {
             variant="accent"
             rightIcon="checkWhite"
             onPress={() => void confirm()}
-            disabled={!canConfirm}
             loading={processing}
             testID="payment-confirm"
           />
@@ -205,7 +130,6 @@ const styles = StyleSheet.create({
   pattern: { opacity: opacity.backgroundPatternLight },
   flex: { flex: 1 },
   flexShrink: { flexShrink: 1 },
-  center: { textAlign: 'center' },
   content: {
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.lg,
@@ -223,8 +147,6 @@ const styles = StyleSheet.create({
     ...shadows.card,
   },
   methods: { gap: spacing.sm },
-  cardSection: { gap: spacing.lg },
-  row: { flexDirection: 'row', gap: spacing.xxl },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',

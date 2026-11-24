@@ -1,0 +1,42 @@
+// Static requires let Metro bundle the supplied recipe photos for offline use.
+const photos: Record<string, number> = {
+  'Panqueca de banana e aveia': require('../../assets/recipe-photos/Panqueca de banana e aveia.png'),
+  'Cuscuz de milho com legumes': require('../../assets/recipe-photos/Cuscuz de milho com legumes.png'),
+  'Tapioca com tomate': require('../../assets/recipe-photos/Tapioca com tomate.png'),
+  'Bolo de banana com aveia': require('../../assets/recipe-photos/Bolo de banana com aveia.png'),
+  'Vitamina de morango e banana': require('../../assets/recipe-photos/Vitamina de morango e banana.png'),
+  'Bolo de fubá': require('../../assets/recipe-photos/Bolo de fubá.png'),
+  'Biscoito de banana e coco': require('../../assets/recipe-photos/Biscoito de banana e coco.png'),
+  'Pão de queijo caseiro': require('../../assets/recipe-photos/Pão de queijo caseiro.png'),
+  'Bolo de laranja com farinha de arroz': require('../../assets/recipe-photos/Bolo de laranja com farinha de arroz.png'),
+  'Smoothie bowl de banana e morango': require('../../assets/recipe-photos/Smoothie bowl de banana e morango.png'),
+  'Muffin salgado de legumes': require('../../assets/recipe-photos/Muffin salgado de legumes.png'),
+  'Sanduíche natural de ricota e cenoura': require('../../assets/recipe-photos/Sanduíche natural de ricota e cenoura.png'),
+  'Bolinho assado de batata com queijo': require('../../assets/recipe-photos/Bolinho assado de batata com queijo.png'),
+  'Pão de frigideira com ervas': require('../../assets/recipe-photos/Pão de frigideira com ervas.png'),
+  'Bolinho de maçã e canela': require('../../assets/recipe-photos/Bolinho de maçã e canela.png'),
+  'Chips de batata-doce assados': require('../../assets/recipe-photos/Chips de batata-doce assados.png'),
+  'Bolinho de arroz assado': require('../../assets/recipe-photos/Bolinho de arroz assado.png'),
+  'Pão de queijo de frigideira': require('../../assets/recipe-photos/Pão de queijo de frigideira.png'),
+  'Panqueca de farinha de arroz com legumes': require('../../assets/recipe-photos/Panqueca de farinha de arroz com legumes.png'),
+  'Homus com palitos de cenoura e pepino': require('../../assets/recipe-photos/Homus com palitos de cenoura e pepino.png'),
+  'Torrada com pasta de abacate e tomate': require('../../assets/recipe-photos/Torrada com pasta de abacate e tomate.png'),
+  'Lasanha de abobrinha e beringela': require('../../assets/recipe-photos/Lasanha de abobrinha e beringela.png'),
+  'Strogonoff de palmito e cogumelo': require('../../assets/recipe-photos/Strogonoff de palmito e cogumelo.png'),
+  'Abobrinha recheada com ricota e espinafre': require('../../assets/recipe-photos/Abobrinha recheada com ricota e espinafre.png'),
+  'Torta de legumes no liquidificador': require('../../assets/recipe-photos/Torta de legumes no liquidificador.png'),
+  'Escondidinho de carne moída com batata': require('../../assets/recipe-photos/Escondidinho de carne moída com batata.png'),
+  'Ratatouille de legumes': require('../../assets/recipe-photos/Ratatouille de legumes.png'),
+  'Paella vegana': require('../../assets/recipe-photos/Paella vegana.png'),
+  'Mousse de maracujá': require('../../assets/recipe-photos/Mousse de maracujá.png'),
+  'Brownie de chocolate': require('../../assets/recipe-photos/Brownie de chocolate.png'),
+  'Pudim de leite condensado': require('../../assets/recipe-photos/Pudim de leite condensado.png'),
+  'Mousse de chocolate': require('../../assets/recipe-photos/Mousse de chocolate.png'),
+  'Brigadeiro sem lactose': require('../../assets/recipe-photos/Brigadeiro sem lactose.png'),
+  'Sorvete de banana e morango': require('../../assets/recipe-photos/Sorvete de banana e morango.png'),
+  'Cocada de forno': require('../../assets/recipe-photos/Cocada de forno.png'),
+};
+
+export function getRecipePhoto(title?: string): number | undefined {
+  return title ? photos[title] : undefined;
+}

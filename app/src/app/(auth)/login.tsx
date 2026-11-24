@@ -21,6 +21,7 @@ export default function LoginScreen() {
   const [touched, setTouched] = useState({ email: false, password: false });
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [confirmationNeeded, setConfirmationNeeded] = useState(false);
   const passwordRef = useRef<React.ComponentRef<typeof TextInput>>(null);
 
   const emailError = validateEmailField(email);
@@ -32,11 +33,18 @@ export default function LoginScreen() {
     if (!valid || loading) return;
     setLoading(true);
     setSubmitError(null);
+    setConfirmationNeeded(false);
     try {
       await login(email, password);
     } catch (error) {
       if (__DEV__) console.warn('[login]', error);
       setSubmitError(authErrorMessage(error));
+      setConfirmationNeeded(
+        !!error &&
+          typeof error === 'object' &&
+          'code' in error &&
+          error.code === 'email_not_confirmed',
+      );
       passwordRef.current?.focus();
     } finally {
       setLoading(false);
@@ -59,7 +67,9 @@ export default function LoginScreen() {
             setEmail((v) => normalizeEmail(v));
             setTouched((s) => ({ ...s, email: true }));
           }}
-          error={touched.email ? fieldErrorMessage('email', emailError) : undefined}
+          error={
+            touched.email || email.length > 0 ? fieldErrorMessage('email', emailError) : undefined
+          }
           onPrimary
           keyboardType="email-address"
           autoCapitalize="none"
@@ -78,7 +88,11 @@ export default function LoginScreen() {
           value={password}
           onChangeText={setPassword}
           onBlur={() => setTouched((s) => ({ ...s, password: true }))}
-          error={touched.password ? fieldErrorMessage('password', passwordError) : undefined}
+          error={
+            touched.password || password.length > 0
+              ? fieldErrorMessage('password', passwordError)
+              : undefined
+          }
           onPrimary
           secure
           autoCapitalize="none"
@@ -103,6 +117,18 @@ export default function LoginScreen() {
 
       <View style={styles.actions}>
         {submitError ? <Banner variant="error" title={submitError} testID="login-error" /> : null}
+        {confirmationNeeded && (
+          <Button
+            label="Confirmar meu e-mail"
+            variant="secondary"
+            onPress={() =>
+              router.push({
+                pathname: '/verify-email',
+                params: { kind: 'signup', email: normalizeEmail(email) },
+              })
+            }
+          />
+        )}
         <Button
           label={t.submit}
           onPress={submit}

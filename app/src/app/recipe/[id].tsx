@@ -84,10 +84,14 @@ function RecipeDetail({
   });
   const facts: { icon: IconName; value: string; label: string }[] = [
     { icon: 'clock', value: strings.recipes.minutes(recipe.readyInMinutes), label: t.totalTime },
-    { icon: 'plate', value: t.servings(recipe.servings), label: t.serves },
+    { icon: 'plate', value: recipe.yieldLabel ?? t.servings(recipe.servings), label: t.serves },
   ];
   if (recipe.caloriesKcal !== null) {
-    facts.push({ icon: 'flame', value: t.kcal(recipe.caloriesKcal), label: t.perServing });
+    facts.push({
+      icon: 'flame',
+      value: t.kcal(recipe.caloriesKcal),
+      label: recipe.calorieBasis ?? t.perServing,
+    });
   }
   const nutrition = [
     { value: recipe.caloriesKcal, label: t.calories, format: t.kcal },
@@ -101,12 +105,19 @@ function RecipeDetail({
     <>
       <RecipeImage
         uri={recipe.imageUrl}
+        recipeTitle={recipe.title}
         style={[styles.image, { height: r.headerImageHeight * k }]}
       />
       <View style={styles.card}>
         <Text style={styles.title} accessibilityRole="header">
           {recipe.title}
         </Text>
+        {recipe.imageUrl && recipe.imageCredit ? (
+          <Text style={typography.caption}>
+            Foto: {recipe.imageCredit}
+            {recipe.imageSourceUrl ? ` — ${recipe.imageSourceUrl}` : ''}
+          </Text>
+        ) : null}
         <View style={styles.chips}>
           {recipe.diets.map((d) => (
             <Chip key={d} label={strings.recipes.diets[d]} tone="orange" />
@@ -128,6 +139,12 @@ function RecipeDetail({
           ))}
         </View>
 
+        {recipe.difficulty ? (
+          <Text style={typography.bodySmall}>Dificuldade: {recipe.difficulty}</Text>
+        ) : null}
+        {recipe.sourceReference ? (
+          <Text style={typography.caption}>Fonte: {recipe.sourceReference}</Text>
+        ) : null}
         <SafetyBanner safety={safety} profileAllergies={profile?.allergies ?? []} />
 
         <Text style={typography.sectionTitle}>{t.ingredients}</Text>
@@ -161,7 +178,9 @@ function RecipeDetail({
 
         {hasNutrition ? (
           <View style={styles.greenCard}>
-            <Text style={typography.bannerTitle}>{t.nutrition}</Text>
+            <Text style={typography.bannerTitle}>
+              {t.nutrition} ({recipe.calorieBasis ?? t.perServing}; valores aproximados)
+            </Text>
             <View style={styles.nutrition}>
               {nutrition.map((n) =>
                 n.value === null ? null : (

@@ -1,14 +1,15 @@
 import { Linking, StyleSheet, Text, View } from 'react-native';
 
-import { RecipeImage } from '@/components/recipes/RecipeImage';
 import { Banner, Button, Chip, Icon, Modal } from '@/components/ui';
 import { ALLERGENS, type AllergenId } from '@/constants/allergens';
+import { PREFERENCES } from '@/constants/preferences';
 import { strings } from '@/constants/strings';
 import { formatDistance, routeUrl, type RankedRestaurant } from '@/features/restaurants/rules';
-import { colors, layout, sizes, spacing, typography } from '@/theme';
+import { colors, sizes, spacing, typography } from '@/theme';
 
 import { ratingText } from './RestaurantCard';
 import { SaveRestaurantButton } from './SaveRestaurantButton';
+import { RestaurantPhotoCarousel } from './RestaurantPhotoCarousel';
 
 const t = strings.restaurants;
 const labelOf = (id: AllergenId) => ALLERGENS.find((a) => a.id === id)?.label ?? id;
@@ -42,7 +43,11 @@ export function RestaurantDetail({
       variant="sheet"
       testID="restaurant-detail"
     >
-      <RecipeImage uri={restaurant.image} style={styles.image} />
+      <RestaurantPhotoCarousel
+        key={restaurant.id}
+        name={restaurant.name}
+        image={restaurant.image}
+      />
       <View style={styles.row}>
         <Text style={[typography.bodySmall, styles.flex]}>
           {t.meta(cuisine, distance === null ? null : formatDistance(distance))}
@@ -54,17 +59,28 @@ export function RestaurantDetail({
             </Text>
             <Icon name="star" size={sizes.iconSmall} />
           </View>
-        ) : (
-          <Text style={typography.caption}>{t.detail.noRating}</Text>
-        )}
+        ) : null}
         <SaveRestaurantButton restaurant={restaurant} onError={onSaveError} />
       </View>
 
       <View style={styles.section}>
         <Text style={typography.sectionTitle}>{t.detail.address}</Text>
-        <Text style={typography.bodySmall}>{restaurant.address}</Text>
+        <Text selectable style={typography.bodySmall}>
+          {restaurant.address}
+        </Text>
       </View>
 
+      {restaurant.description ? (
+        <Text style={typography.bodySmall}>{restaurant.description}</Text>
+      ) : null}
+      {restaurant.phone ? (
+        <Text style={typography.bodySmall}>Telefone: {restaurant.phone}</Text>
+      ) : null}
+      <View style={styles.chips}>
+        {PREFERENCES.filter((p) => restaurant.diets?.includes(p.id)).map((p) => (
+          <Chip key={p.id} label={p.label} />
+        ))}
+      </View>
       <View style={styles.section} testID="detail-covered">
         <Text style={typography.sectionTitle}>{t.detail.covered}</Text>
         <AllergenChips ids={covered} />
@@ -105,7 +121,6 @@ function AllergenChips({ ids }: { ids: readonly AllergenId[] }) {
 }
 
 const styles = StyleSheet.create({
-  image: { height: layout.restaurants.detailImageHeight, alignSelf: 'stretch' },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   flex: { flex: 1 },
   rating: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },

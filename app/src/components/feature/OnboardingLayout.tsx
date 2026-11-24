@@ -23,6 +23,7 @@ export type OnboardingStep = 1 | 2 | 3;
 
 export interface OnboardingLayoutProps {
   step: OnboardingStep;
+  permissions?: boolean;
   title: string;
   subtitle: string;
   children: ReactNode;
@@ -33,6 +34,7 @@ const o = layout.onboarding;
 
 export function OnboardingLayout({
   step,
+  permissions = false,
   title,
   subtitle,
   children,
@@ -47,11 +49,11 @@ export function OnboardingLayout({
       if (step === 1) return undefined;
       const sub = BackHandler.addEventListener('hardwareBackPress', () => {
         if (router.canGoBack()) return false;
-        router.replace(step === 3 ? '/step-2' : '/step-1');
+        router.replace(permissions ? '/step-3' : step === 3 ? '/step-2' : '/step-1');
         return true;
       });
       return () => sub.remove();
-    }, [step]),
+    }, [step, permissions]),
   );
 
   return (
@@ -74,8 +76,10 @@ export function OnboardingLayout({
             { paddingTop: insets.top + o.progressTop, paddingBottom: insets.bottom + spacing.xxl },
           ]}
         >
-          <ProgressSteps total={3} current={step} />
-          <Text style={[typography.stepLabel, styles.label]}>{strings.onboarding.step(step)}</Text>
+          {!permissions ? <ProgressSteps total={3} current={step} /> : null}
+          <Text style={[typography.stepLabel, styles.label]}>
+            {permissions ? 'Quase pronto' : strings.onboarding.step(step)}
+          </Text>
           <Text style={[typography.formTitle, styles.title]} accessibilityRole="header">
             {title}
           </Text>

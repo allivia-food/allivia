@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { renderWithClient } from '../../test-utils/renderWithClient';
 import { Linking, StyleSheet } from 'react-native';
 
@@ -27,21 +27,63 @@ jest.mock('expo-router', () => {
 });
 const mockRouter = jest.requireMock('expo-router').router as Record<string, jest.Mock>;
 
-jest.mock('react-native-maps', () => {
+const mockMapUpdate = jest.fn();
+jest.mock('react-native-webview', () => {
   const { Pressable, View } = jest.requireActual('react-native');
-  const { forwardRef, useImperativeHandle } = jest.requireActual('react');
-  const MapView = forwardRef((props: { children?: unknown }, ref: unknown) => {
-    useImperativeHandle(ref, () => ({ animateToRegion: jest.fn(), animateCamera: jest.fn() }));
-    return <View testID="map">{props.children as never}</View>;
-  });
-  const Marker = (props: { onPress?: () => void; testID?: string; title?: string }) => (
-    <Pressable
-      onPress={props.onPress}
-      testID={props.testID ?? 'marker-user'}
-      accessibilityLabel={props.title}
-    />
+  const { forwardRef, useImperativeHandle, useRef, useEffect, useState } =
+    jest.requireActual('react');
+  const { runInNewContext } = jest.requireActual('node:vm');
+  const WebView = forwardRef(
+    (
+      props: { onMessage: (event: unknown) => void; testID: string; onError: () => void },
+      ref: unknown,
+    ) => {
+      const message = useRef(props.onMessage);
+      message.current = props.onMessage;
+      const [points, setPoints] = useState([]);
+      useImperativeHandle(ref, () => ({
+        injectJavaScript: (script: string) => {
+          runInNewContext(script, {
+            window: {
+              updateAlliviaMap: (state: {
+                points: { id: string; name: string }[];
+                selectedId: string | null;
+              }) => {
+                mockMapUpdate(state);
+                setPoints(state.points);
+                if (state.selectedId)
+                  message.current({
+                    nativeEvent: {
+                      data: JSON.stringify({ type: 'centered', id: state.selectedId }),
+                    },
+                  });
+              },
+            },
+          });
+        },
+      }));
+      useEffect(() => {
+        message.current({ nativeEvent: { data: '{"type":"ready"}' } });
+      }, []);
+      return (
+        <View testID={props.testID} onError={props.onError}>
+          {points.map((point: { id: string; name: string }) => (
+            <Pressable
+              key={point.id}
+              testID={`marker-${point.id}`}
+              accessibilityLabel={point.name}
+              onPress={() =>
+                message.current({
+                  nativeEvent: { data: JSON.stringify({ type: 'select', id: point.id }) },
+                })
+              }
+            />
+          ))}
+        </View>
+      );
+    },
   );
-  return { __esModule: true, default: MapView, Marker, PROVIDER_GOOGLE: 'google' };
+  return { WebView };
 });
 
 const mockOpenURL = jest.fn(async (_url: string) => undefined);
@@ -132,16 +174,55 @@ beforeEach(() => {
   mockSave.mockResolvedValue(undefined);
   mockUnsave.mockResolvedValue(undefined);
   mockDevice.mockResolvedValue(HERE);
+  mockFind.mockResolvedValue(null);
   jest.spyOn(console, 'warn').mockImplementation(() => {});
 });
 
 describe('Restaurantes', () => {
+  it('locates restaurants by address and shows a pin before selecting their card', async () => {
+    mockFind.mockResolvedValue({ ...HERE, ...at(2) });
+    useProfileStore.getState().setProfile({ ...profile, allergies: [], preferences: ['vegan'] });
+    mockGet.mockResolvedValue([
+      {
+        ...NATURAL,
+        lat: null,
+        lng: null,
+        diets: ['vegan'],
+        phone: '(11) 1234-5678',
+        description: 'Preparações vegetais do catálogo.',
+      },
+    ]);
+    await renderWithClient(<RestaurantsScreen />);
+    await screen.findByTestId('restaurant-r1');
+    expect(await screen.findByTestId('marker-r1')).toBeTruthy();
+    expect(mockFind).toHaveBeenCalledWith(NATURAL.address);
+    expect(screen.queryByText('Localização por endereço; distância indisponível')).toBeNull();
+    jest.useFakeTimers();
+    await fireEvent.press(screen.getByTestId('restaurant-r1'));
+    await act(async () => jest.advanceTimersByTime(300));
+    await act(async () => jest.advanceTimersByTime(5_000));
+    jest.useRealTimers();
+    await waitFor(() =>
+      expect(mockMapUpdate).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          selectedId: 'r1',
+          points: expect.arrayContaining([
+            expect.objectContaining({ id: 'r1', lat: at(2).lat, lng: at(2).lng }),
+          ]),
+        }),
+      ),
+    );
+    expect(await screen.findByText('Telefone: (11) 1234-5678')).toBeTruthy();
+    expect(screen.getByText('Preparações vegetais do catálogo.')).toBeTruthy();
+  });
+
   it('uses the device location: only restaurants covering Glúten + Leite, by distance', async () => {
     await renderWithClient(<RestaurantsScreen />);
     expect(await screen.findByTestId('restaurant-r1')).toBeTruthy();
     expect(screen.getByText('Av. Taboão, 305')).toBeTruthy();
     expect(cardIds()).toEqual(['restaurant-r1', 'restaurant-r2']);
-    expect(screen.getByText('Vegetariano • 1,2 km')).toBeTruthy();
+    expect(screen.getAllByText('Vegetariano').length).toBeGreaterThan(0);
+    expect(screen.queryByText('Vegetariano • 1,2 km')).toBeNull();
     expect(screen.getAllByText('Opções sem glúten e sem leite')).toHaveLength(2);
     expect(screen.queryByTestId('restaurants-approximate')).toBeNull();
   });
@@ -213,7 +294,14 @@ describe('Restaurantes', () => {
 
   it('detail: notice, custom allergy and the Google Maps route', async () => {
     await renderWithClient(<RestaurantsScreen />);
-    await fireEvent.press(await screen.findByTestId('restaurant-r1'));
+    const card = await screen.findByTestId('restaurant-r1');
+    jest.useFakeTimers();
+    await fireEvent.press(card);
+    expect(screen.queryByTestId('restaurant-detail')).toBeNull();
+    await act(async () => jest.advanceTimersByTime(4_999));
+    expect(screen.queryByTestId('restaurant-detail')).toBeNull();
+    await act(async () => jest.advanceTimersByTime(1));
+    jest.useRealTimers();
     expect(
       screen.getByText(
         'Informações sobre alergênicos devem ser confirmadas diretamente com o restaurante antes de consumir.',

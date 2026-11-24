@@ -1,362 +1,213 @@
-import { useQueryClient } from '@tanstack/react-query';
-import { CameraView, useCameraPermissions, type BarcodeScanningResult } from 'expo-camera';
-import * as Haptics from 'expo-haptics';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { Image } from 'expo-image';
-import * as Linking from 'expo-linking';
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useRef, useState } from 'react';
-import {
-  ActivityIndicator,
-  Platform,
-  StyleSheet,
-  Text,
-  View,
-  useWindowDimensions,
-} from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
+import { useCallback, useState } from 'react';
+import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { PremiumPlan } from '@/components/premium/PremiumPlan';
-import { Button, Icon, IconButton, Input, Modal, StateView } from '@/components/ui';
+import { Button, HeaderLogo, Icon, StateView } from '@/components/ui';
 import { FEATURES } from '@/constants/features';
-import { images } from '@/constants/icons';
-import { strings } from '@/constants/strings';
-import { authErrorKind } from '@/features/auth/authErrors';
-import { analyzeProduct } from '@/features/scanner/analyzeProduct';
-import {
-  isDuplicateRead,
-  isValidScannedBarcode,
-  normalizeManualBarcode,
-  type LastRead,
-} from '@/features/scanner/barcode';
 import { usePremium } from '@/hooks/usePremium';
-import { productKey, productQuery } from '@/hooks/useProduct';
-import { InvalidProductDataError, recordScan } from '@/services/products';
+import { getSupabase } from '@/services/supabase';
 import { useProfileStore } from '@/store/profile';
-import { colors, layout, opacity, radius, sizes, spacing, typography } from '@/theme';
+import { colors, spacing, radius, typography } from '@/theme';
+import { withTimeout } from '@/utils/withTimeout';
 
-const t = strings.scanner;
-const s = layout.scanner;
-const BARCODE_TYPES = ['ean13', 'ean8', 'upc_a', 'upc_e'] as const;
+const labels = {
+  safe: 'Sem alertas identificados',
+  warning: 'Atenção',
+  contains: 'Contém restrições',
+  not_found: 'Produto não encontrado',
+};
+type Scan = {
+  id: string;
+  barcode: string;
+  product_name: string | null;
+  scanned_at: string;
+  verdict: keyof typeof labels;
+  image_url?: string | null;
+};
 
-type Phase =
-  | { kind: 'scanning' }
-  | { kind: 'loading'; code: string }
-  | { kind: 'notFound'; code: string }
-  | { kind: 'error'; code: string; message: string };
-
+function ProductPhoto({ uri, name }: { uri?: string | null; name: string | null }) {
+  const [failed, setFailed] = useState(false);
+  return (
+    <View style={styles.photo}>
+      {uri && !failed ? (
+        <Image
+          source={{ uri }}
+          style={StyleSheet.absoluteFill}
+          contentFit="contain"
+          accessibilityLabel={`Foto de ${name || 'alimento'}`}
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        <Icon name="plate" size={32} color={colors.textPlaceholder} />
+      )}
+    </View>
+  );
+}
 export default function ScannerScreen() {
   const { isPremium } = usePremium();
-  return FEATURES.premiumGate && !isPremium ? <PremiumPlan /> : <ScannerCamera />;
+  return FEATURES.premiumGate && !isPremium ? <PremiumPlan /> : <History />;
 }
-
-function ScannerCamera() {
-  const profile = useProfileStore((st) => st.profile);
-  const queryClient = useQueryClient();
-  const [permission, requestPermission] = useCameraPermissions();
-  const [focused, setFocused] = useState(false);
-  const [torch, setTorch] = useState(false);
-  const [cameraError, setCameraError] = useState(false);
-  const [phase, setPhase] = useState<Phase>({ kind: 'scanning' });
-  const [manualOpen, setManualOpen] = useState(false);
-  const busy = useRef(false);
-  const lastRead = useRef<LastRead | null>(null);
-  const { width } = useWindowDimensions();
-  const insets = useSafeAreaInsets();
-  const k = width / layout.frameWidth;
-
-  useFocusEffect(
-    useCallback(() => {
-      setFocused(true);
-      setPhase({ kind: 'scanning' });
-      busy.current = false;
-      return () => {
-        setFocused(false);
-        setTorch(false);
-      };
-    }, []),
-  );
-
-  const analyze = useCallback(
-    async (code: string) => {
-      busy.current = true;
-      setPhase({ kind: 'loading', code });
+function History() {
+  const profile = useProfileStore((s) => s.profile);
+  const query = useInfiniteQuery({
+    queryKey: ['scan-history', profile?.id],
+    initialPageParam: 0,
+    enabled: !!profile,
+    queryFn: async ({ pageParam }) => {
+      const { data, error } = await getSupabase()
+        .from('scans')
+        .select('id,barcode,product_name,scanned_at,verdict')
+        .eq('user_id', profile!.id)
+        .order('scanned_at', { ascending: false })
+        .order('id', { ascending: false })
+        .range(pageParam * 20, pageParam * 20 + 19);
+      if (error) throw error;
+      const scans = (data ?? []) as Scan[];
+      if (!scans.length) return scans;
+      // Photos are optional: a cache failure must not prevent reading history.
       try {
-        const { product } = await queryClient.fetchQuery(productQuery(code));
-        if (!product) {
-          if (profile) void recordScan(profile.id, code, null, 'not_found', []);
-          setPhase({ kind: 'notFound', code });
-          return;
-        }
-        if (profile) {
-          const result = analyzeProduct(product, profile);
-          const matched = [
-            ...new Set(result.matches.flatMap((m) => (m.allergenId ? [m.allergenId] : []))),
-          ];
-          void recordScan(profile.id, code, product.name, result.verdict, matched);
-        }
-        router.push({ pathname: '/scanner-result', params: { barcode: code } });
-      } catch (error) {
-        if (__DEV__) console.warn('[scanner]', error);
-        queryClient.removeQueries({ queryKey: productKey(code) });
-        setPhase({
-          kind: 'error',
-          code,
-          message:
-            error instanceof InvalidProductDataError
-              ? t.invalidData
-              : authErrorKind(error) === 'network'
-                ? strings.common.networkError
-                : strings.common.unknownError,
-        });
+        const { data: photos, error: photoError } = await withTimeout(
+          getSupabase()
+            .from('products_cache')
+            .select('barcode,image_url')
+            .in('barcode', [...new Set(scans.map((scan) => scan.barcode))]),
+          3000,
+        );
+        if (photoError) return scans;
+        const images = new Map<string, string | null>(
+          (photos ?? []).map((photo) => [photo.barcode, photo.image_url]),
+        );
+        return scans.map((scan) => ({ ...scan, image_url: images.get(scan.barcode) }));
+      } catch {
+        return scans;
       }
     },
-    [profile, queryClient],
+    getNextPageParam: (last, pages) => (last.length === 20 ? pages.length : undefined),
+  });
+  const { refetch } = query;
+  useFocusEffect(
+    useCallback(() => {
+      void refetch();
+    }, [refetch]),
   );
-
-  function onScanned(result: BarcodeScanningResult) {
-    if (busy.current) return;
-    const now = Date.now();
-    if (isDuplicateRead(result.data, now, lastRead.current)) return;
-    if (!isValidScannedBarcode(result.data, result.type)) return;
-    lastRead.current = { code: result.data, at: now };
-    if (Platform.OS !== 'web') void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    void analyze(result.data);
-  }
-
-  const scanning = phase.kind === 'scanning';
-  const cameraAllowed = permission?.granted && !cameraError;
-
   return (
-    <View style={styles.screen}>
-      <View style={[styles.camera, { height: s.cameraHeight * k }]}>
-        {cameraAllowed ? (
-          <>
-            <CameraView
-              style={StyleSheet.absoluteFill}
-              facing="back"
-              active={focused}
-              enableTorch={torch && focused}
-              barcodeScannerSettings={{ barcodeTypes: [...BARCODE_TYPES] }}
-              onBarcodeScanned={focused && scanning ? onScanned : undefined}
-              onMountError={() => setCameraError(true)}
-              accessibilityLabel={t.cameraLabel}
-            />
-            <Image
-              source={images.scannerFrame}
-              style={[
-                styles.frame,
-                { top: s.frameTop * k, width: s.frameWidth * k, height: s.frameHeight * k },
-              ]}
-              contentFit="contain"
-              accessible={false}
-            />
-            {Platform.OS !== 'web' ? (
-              <View style={[styles.torch, { top: insets.top + spacing.md }]}>
-                <IconButton
-                  icon="flashOff"
-                  iconSize={sizes.iconTab}
-                  color={torch ? colors.primary : undefined}
-                  onPress={() => setTorch((v) => !v)}
-                  accessibilityLabel={torch ? t.torchOff : t.torchOn}
-                  testID="scanner-torch"
-                />
-              </View>
-            ) : null}
-            <View style={[styles.tip, { width: s.tipWidth * k }]}>
-              <Icon name="lightbulb" size={sizes.iconButton} />
-              <Text style={[typography.caption, styles.flex]}>{t.tip}</Text>
-            </View>
-          </>
-        ) : (
-          <PermissionView
-            permission={permission}
-            cameraError={cameraError}
-            onRequest={() => void requestPermission()}
-            onManual={() => setManualOpen(true)}
-          />
+    <SafeAreaView style={styles.screen} edges={['top']}>
+      <FlatList
+        contentContainerStyle={styles.content}
+        data={(query.data?.pages.flat() ?? []).filter(
+          (scan, index, scans) =>
+            scans.findIndex((item) => item.barcode === scan.barcode) === index,
         )}
-
-        {phase.kind !== 'scanning' ? (
-          <View style={styles.overlay} testID={`scanner-${phase.kind}`}>
-            {phase.kind === 'loading' ? (
-              <>
-                <ActivityIndicator color={colors.primary} size="large" />
-                <Text style={typography.subtitle}>{t.analyzing}</Text>
-              </>
-            ) : phase.kind === 'notFound' ? (
-              <>
-                <Text style={[typography.sectionTitle, styles.center]}>{t.notFound}</Text>
-                <Text style={typography.bodySmall}>{t.code(phase.code)}</Text>
-                <Button label={t.scanAgain} onPress={() => resetScan()} testID="scanner-again" />
-                <Button
-                  label={t.typeOther}
-                  variant="secondary"
-                  onPress={() => {
-                    resetScan();
-                    setManualOpen(true);
-                  }}
-                />
-              </>
-            ) : (
-              <>
-                <Text style={[typography.subtitle, styles.center]}>{phase.message}</Text>
-                <Button
-                  label={strings.common.retry}
-                  onPress={() => void analyze(phase.code)}
-                  testID="scanner-retry"
-                />
-                <Button label={t.scanAgain} variant="secondary" onPress={() => resetScan()} />
-              </>
-            )}
-          </View>
-        ) : null}
-      </View>
-
-      <View style={styles.bottom}>
-        <Image
-          source={images.splashBackground}
-          style={[StyleSheet.absoluteFill, styles.pattern]}
-          contentFit="cover"
-          accessible={false}
-        />
-        <Text
-          style={styles.manual}
-          onPress={() => setManualOpen(true)}
-          accessibilityRole="button"
-          testID="scanner-manual"
-        >
-          {t.manual}
-        </Text>
-      </View>
-
-      {manualOpen ? (
-        <ManualEntry
-          onClose={() => setManualOpen(false)}
-          onSubmit={(code) => {
-            setManualOpen(false);
-            lastRead.current = { code, at: Date.now() };
-            void analyze(code);
-          }}
-        />
-      ) : null}
-    </View>
-  );
-
-  function resetScan() {
-    busy.current = false;
-    setPhase({ kind: 'scanning' });
-  }
-}
-
-function PermissionView({
-  permission,
-  cameraError,
-  onRequest,
-  onManual,
-}: {
-  permission: ReturnType<typeof useCameraPermissions>[0];
-  cameraError: boolean;
-  onRequest: () => void;
-  onManual: () => void;
-}) {
-  if (!permission) return <StateView variant="loading" />;
-  const denied = !permission.granted && !permission.canAskAgain;
-  return (
-    <View style={styles.permission} testID="scanner-permission">
-      <Icon name="barcodeLarge" size={sizes.iconBadgeLarge} />
-      <Text style={[typography.sectionTitle, styles.center]}>
-        {cameraError ? t.unavailable : denied ? t.permissionDenied : t.permissionTitle}
-      </Text>
-      {!cameraError && !denied ? (
-        <Button label={t.permissionButton} onPress={onRequest} testID="scanner-allow" />
-      ) : null}
-      {!cameraError && denied ? (
-        <Button
-          label={t.openSettings}
-          onPress={() => void Linking.openSettings()}
-          testID="scanner-settings"
-        />
-      ) : null}
-      <Button label={t.manual} variant="secondary" onPress={onManual} />
-    </View>
-  );
-}
-
-function ManualEntry({
-  onClose,
-  onSubmit,
-}: {
-  onClose: () => void;
-  onSubmit: (code: string) => void;
-}) {
-  const [value, setValue] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  function confirm() {
-    const code = normalizeManualBarcode(value);
-    if (!code) {
-      setError(t.invalidCode);
-      return;
-    }
-    onSubmit(code);
-  }
-  return (
-    <Modal visible onClose={onClose} title={t.manualTitle} testID="scanner-manual-modal">
-      <Input
-        icon="barcode"
-        placeholder={t.manualPlaceholder}
-        value={value}
-        onChangeText={(v) => {
-          setValue(v.replace(/[^\d ]/g, ''));
-          setError(null);
+        keyExtractor={(item) => item.id}
+        refreshing={query.isRefetching}
+        onRefresh={() => void refetch()}
+        onEndReached={() => {
+          if (query.hasNextPage && !query.isFetching) void query.fetchNextPage();
         }}
-        keyboardType="number-pad"
-        maxLength={18}
-        error={error ?? undefined}
-        returnKeyType="done"
-        onSubmitEditing={confirm}
-        autoFocus
-        testID="scanner-manual-input"
+        ListHeaderComponent={
+          <View style={styles.header}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+              <Text style={[typography.screenTitle, { flex: 1 }]}>Histórico de alimentos</Text>
+              <HeaderLogo />
+            </View>
+            <Text style={typography.bodyLarge}>
+              Reveja seus escaneamentos e cuide das suas escolhas.
+            </Text>
+            <Button
+              label="Escanear alimento"
+              onPress={() => router.push({ pathname: '/scanner-camera' as never })}
+            />
+          </View>
+        }
+        ListEmptyComponent={
+          query.isPending ? (
+            <StateView variant="loading" />
+          ) : query.isError ? (
+            <StateView variant="error" onRetry={() => void refetch()} />
+          ) : (
+            <View style={styles.card}>
+              <Text style={typography.sectionTitle}>Seu histórico começa aqui</Text>
+              <Text style={typography.bodySmall}>
+                Escaneie um alimento para consultar seus resultados aqui.
+              </Text>
+            </View>
+          )
+        }
+        ListFooterComponent={
+          query.isFetchNextPageError ? (
+            <Button label="Tentar novamente" onPress={() => void query.fetchNextPage()} />
+          ) : query.isFetchingNextPage ? (
+            <StateView variant="loading" />
+          ) : undefined
+        }
+        renderItem={({ item }) => (
+          <View style={styles.card}>
+            <View style={styles.cardRow}>
+              <View style={styles.cardDetails}>
+                <Text style={typography.sectionTitle}>
+                  {item.product_name || 'Produto não identificado'}
+                </Text>
+                <Text style={typography.bodySmall}>
+                  {item.barcode} · {new Date(item.scanned_at).toLocaleString('pt-BR')}
+                </Text>
+                <Text
+                  style={[
+                    typography.bodySmall,
+                    {
+                      color:
+                        item.verdict === 'contains'
+                          ? colors.error
+                          : item.verdict === 'safe'
+                            ? colors.secondary
+                            : colors.primary,
+                    },
+                  ]}
+                >
+                  Resultado registrado: {labels[item.verdict]}
+                </Text>
+              </View>
+              <ProductPhoto
+                key={`${item.barcode}:${item.image_url}`}
+                uri={item.image_url}
+                name={item.product_name}
+              />
+            </View>
+            <Button
+              label="Ver alimento"
+              variant="secondary"
+              onPress={() =>
+                router.push({ pathname: '/scanner-result', params: { barcode: item.barcode } })
+              }
+            />
+          </View>
+        )}
       />
-      <Button label={t.manualConfirm} onPress={confirm} testID="scanner-manual-confirm" />
-    </Modal>
+    </SafeAreaView>
   );
 }
-
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
-  flex: { flex: 1 },
-  center: { textAlign: 'center' },
-  camera: { backgroundColor: colors.cameraBackground, overflow: 'hidden' },
-  frame: { position: 'absolute', alignSelf: 'center' },
-  torch: { position: 'absolute', right: spacing.screenHorizontal },
-  tip: {
-    position: 'absolute',
-    bottom: spacing.xl,
-    alignSelf: 'center',
-    flexDirection: 'row',
+  content: { padding: spacing.xl, gap: spacing.lg },
+  header: { gap: spacing.lg, marginBottom: spacing.lg },
+  cardRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  cardDetails: { flex: 1, minWidth: 0, gap: spacing.sm },
+  photo: {
+    width: 88,
+    height: 104,
+    flexShrink: 0,
+    borderRadius: radius.image,
+    overflow: 'hidden',
+    backgroundColor: colors.background,
     alignItems: 'center',
-    gap: spacing.md,
-    padding: spacing.md,
+    justifyContent: 'center',
+  },
+  card: {
+    padding: spacing.lg,
+    gap: spacing.sm,
+    backgroundColor: colors.surfaceOrange,
     borderRadius: radius.card,
-    backgroundColor: colors.tipBackground,
   },
-  overlay: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: colors.background,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.lg,
-    padding: spacing.formHorizontal,
-  },
-  permission: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.lg,
-    padding: spacing.formHorizontal,
-    backgroundColor: colors.background,
-  },
-  bottom: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  pattern: { opacity: opacity.backgroundPatternLight },
-  manual: { ...typography.link, color: colors.secondary, padding: spacing.md },
 });

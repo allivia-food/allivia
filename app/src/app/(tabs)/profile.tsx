@@ -4,7 +4,8 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { DeleteAccountModal } from '@/components/feature/DeleteAccountModal';
-import { EditInfoModal } from '@/components/feature/EditInfoModal';
+import { ProfilePlan } from '@/components/feature/ProfilePlan';
+import { ProfileAvatar } from '@/components/feature/ProfileAvatar';
 import { ProfileMissing } from '@/components/feature/ProfileMissing';
 import { ProfileRow } from '@/components/feature/ProfileRow';
 import { Button, Card, IconBadge, LargeTitleHeader, Toast } from '@/components/ui';
@@ -19,14 +20,12 @@ const t = strings.profile;
 
 export default function ProfileScreen() {
   const profile = useProfileStore((s) => s.profile);
-  const [editing, setEditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [signingOut, setSigningOut] = useState(false);
 
   if (!profile) return <ProfileMissing />;
   const summary = restrictionsSummary(profile.allergies, profile.customAllergies);
-  const openRestrictions = () => router.push('/profile/edit-preferences');
 
   return (
     <SafeAreaView style={styles.screen} edges={[]}>
@@ -34,7 +33,7 @@ export default function ProfileScreen() {
         <LargeTitleHeader title={t.title} />
         <View style={styles.body}>
           <Card style={styles.userCard}>
-            <IconBadge icon="user" size="medium" accessibilityLabel={t.avatar} />
+            <ProfileAvatar path={profile.avatarPath} />
             <View style={styles.userTexts}>
               <Text style={typography.sectionTitle} numberOfLines={1} testID="profile-name">
                 {profile.displayName}
@@ -45,7 +44,7 @@ export default function ProfileScreen() {
             </View>
             <Text
               style={styles.editLink}
-              onPress={() => setEditing(true)}
+              onPress={() => router.push('/profile/edit')}
               accessibilityRole="button"
               testID="profile-edit"
             >
@@ -56,7 +55,7 @@ export default function ProfileScreen() {
           <Card
             variant="green"
             style={styles.restrictions}
-            onPress={openRestrictions}
+
             accessibilityLabel={`${t.myRestrictions}: ${
               [...summary.items.map((i) => i.label)].join(', ') || t.noAllergies
             }`}
@@ -91,13 +90,7 @@ export default function ProfileScreen() {
             )}
           </Card>
 
-          <ProfileRow
-            title={t.restrictionsRow}
-            subtitle={t.restrictionsRowHint}
-            onPress={openRestrictions}
-            testID="profile-row-restrictions"
-          />
-
+          <ProfilePlan />
           <Text style={[typography.sectionTitle, styles.section]}>{t.others}</Text>
           <ProfileRow title={t.help} onPress={() => router.push('/profile/help')} />
           <ProfileRow title={t.terms} onPress={() => router.push('/profile/terms')} />
@@ -128,14 +121,6 @@ export default function ProfileScreen() {
         </View>
       </ScrollView>
 
-      {editing ? (
-        <EditInfoModal
-          visible
-          profile={profile}
-          onClose={() => setEditing(false)}
-          onSaved={setToast}
-        />
-      ) : null}
       {deleting ? (
         <DeleteAccountModal visible email={profile.email} onClose={() => setDeleting(false)} />
       ) : null}

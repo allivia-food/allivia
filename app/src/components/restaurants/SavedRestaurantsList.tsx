@@ -7,6 +7,7 @@ import { authErrorKind } from '@/features/auth/authErrors';
 import {
   coverageOf,
   distanceMeters,
+  hasCoordinates,
   type RankedRestaurant,
   type Restaurant,
 } from '@/features/restaurants/rules';
@@ -34,7 +35,8 @@ export function SavedRestaurantsList() {
     () =>
       (query.data ?? []).map(({ restaurant }) => ({
         restaurant,
-        distance: location ? distanceMeters(location, restaurant) : null,
+        distance:
+          location && hasCoordinates(restaurant) ? distanceMeters(location, restaurant) : null,
         ...coverageOf(restaurant, profile?.allergies ?? []),
       })),
     [query.data, location, profile?.allergies],

@@ -67,6 +67,8 @@ const styles = StyleSheet.create({
   base: {
     minHeight: sizes.chipHeight,
     paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    maxWidth: '100%',
     borderRadius: radius.pill,
     alignItems: 'center',
     justifyContent: 'center',

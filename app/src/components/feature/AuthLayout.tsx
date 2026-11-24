@@ -90,7 +90,7 @@ export function AuthLayout({
         </ScrollView>
       </KeyboardAvoidingView>
       <View style={styles.header} pointerEvents="box-none">
-        <ScreenHeader title={title} onBack={onBack} />
+        <ScreenHeader title={title} onBack={onBack} showLogo={false} />
       </View>
     </View>
   );

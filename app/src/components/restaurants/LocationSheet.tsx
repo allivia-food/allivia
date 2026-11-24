@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import {
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
   Modal as NativeModal,
   Pressable,
   ScrollView,
@@ -8,6 +10,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Card, Icon, IconButton } from '@/components/ui';
 import { strings } from '@/constants/strings';
@@ -47,6 +50,7 @@ export function LocationSheet({
   initialMessage = null,
   deviceLabel = null,
 }: LocationSheetProps) {
+  const insets = useSafeAreaInsets();
   const [query, setQuery] = useState('');
   const [busy, setBusy] = useState<Busy>(null);
   const [message, setMessage] = useState<string | null>(initialMessage);
@@ -81,8 +85,18 @@ export function LocationSheet({
   }
 
   return (
-    <NativeModal visible transparent animationType="slide" onRequestClose={onClose}>
-      <View style={styles.overlay}>
+    <NativeModal
+      visible
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+      statusBarTranslucent
+      navigationBarTranslucent
+    >
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={[styles.overlay, { paddingTop: insets.top, paddingBottom: insets.bottom }]}
+      >
         <Pressable
           style={StyleSheet.absoluteFill}
           onPress={onClose}
@@ -160,7 +174,7 @@ export function LocationSheet({
             ) : null}
           </ScrollView>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </NativeModal>
   );
 }

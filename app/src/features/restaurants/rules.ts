@@ -1,3 +1,5 @@
+import type { PreferenceId } from '@/constants/preferences';
+
 import { ALLERGENS, type AllergenId } from '@/constants/allergens';
 
 export type Cuisine = 'healthy' | 'vegetarian' | 'snacks' | 'other';
@@ -8,7 +10,13 @@ export interface LatLng {
   lng: number;
 }
 
-export interface Restaurant extends LatLng {
+export interface Restaurant {
+  lat: number | null;
+  lng: number | null;
+  description?: string | null;
+  phone?: string | null;
+  diets?: PreferenceId[];
+  allergenSource?: string | null;
   id: string;
   name: string;
   address: string;
@@ -16,6 +24,10 @@ export interface Restaurant extends LatLng {
   allergenFriendly: AllergenId[];
   rating: number | null;
   image: string | null;
+}
+
+export function hasCoordinates(r: { lat: number | null; lng: number | null }): r is LatLng {
+  return r.lat !== null && r.lng !== null && Number.isFinite(r.lat) && Number.isFinite(r.lng);
 }
 
 export interface RankedRestaurant {
@@ -64,7 +76,7 @@ export function rankRestaurants(
   const ranked: RankedRestaurant[] = restaurants
     .map((restaurant) => ({
       restaurant,
-      distance: origin ? distanceMeters(origin, restaurant) : null,
+      distance: origin && hasCoordinates(restaurant) ? distanceMeters(origin, restaurant) : null,
       ...coverageOf(restaurant, allergies),
     }))
     .filter((r) => r.distance === null || r.distance <= radiusKm * 1000);
@@ -72,7 +84,11 @@ export function rankRestaurants(
   const byDistance = (a: RankedRestaurant, b: RankedRestaurant) =>
     a.distance !== null && b.distance !== null
       ? a.distance - b.distance
-      : a.restaurant.name.localeCompare(b.restaurant.name, 'pt-BR');
+      : a.distance !== null
+        ? -1
+        : b.distance !== null
+          ? 1
+          : a.restaurant.name.localeCompare(b.restaurant.name, 'pt-BR');
 
   const full = ranked.filter((r) => r.missing.length === 0);
   if (full.length > 0 || ranked.length === 0) {
@@ -91,13 +107,16 @@ export function filterRestaurants(
   query: string,
   cuisine: CuisineFilter,
   cuisineLabels: Record<Cuisine, string>,
+  diets: readonly PreferenceId[] = [],
 ): RankedRestaurant[] {
   const q = normalize(query);
   return items.filter(({ restaurant }) => {
+    if (!diets.every((d) => restaurant.diets?.includes(d))) return false;
     if (cuisine !== 'all' && restaurant.cuisine !== cuisine) return false;
     if (!q) return true;
     return (
       normalize(restaurant.name).includes(q) ||
+      normalize(restaurant.address).includes(q) ||
       normalize(cuisineLabels[restaurant.cuisine]).includes(q)
     );
   });
@@ -114,5 +133,9 @@ export function allergenFreeText(covered: readonly AllergenId[]): string {
   return `Opções ${parts.join(' e ')}`;
 }
 
-export const routeUrl = ({ lat, lng }: LatLng) =>
-  `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
+export const routeUrl = (restaurant: {
+  lat: number | null;
+  lng: number | null;
+  address?: string;
+}) =>
+  `https://www.google.com/maps/dir/?api=1&destination=${hasCoordinates(restaurant) ? `${restaurant.lat},${restaurant.lng}` : encodeURIComponent(restaurant.address ?? '')}&travelmode=driving`;

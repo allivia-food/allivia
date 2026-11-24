@@ -29,7 +29,7 @@ export function RecipeRowCard({ recipe, onPress, onSaveError, onRemoved }: Recip
       testID={`recipe-${recipe.id}`}
       action={<SaveRecipeButton recipe={recipe} onError={onSaveError} onRemoved={onRemoved} />}
     >
-      <RecipeImage uri={recipe.imageUrl} style={styles.image} />
+      <RecipeImage uri={recipe.imageUrl} recipeTitle={recipe.title} style={styles.image} />
       <View style={styles.body}>
         <View style={styles.top}>
           <View style={styles.texts}>

@@ -34,7 +34,7 @@ export function RecipeFeaturedCard({
       actionStyle={styles.action}
     >
       <View>
-        <RecipeImage uri={recipe.imageUrl} style={styles.image} />
+        <RecipeImage uri={recipe.imageUrl} recipeTitle={recipe.title} style={styles.image} />
         <View style={styles.time}>
           <Chip label={strings.recipes.minutes(recipe.readyInMinutes)} variant="time" />
         </View>

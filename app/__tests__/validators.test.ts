@@ -11,6 +11,10 @@ import {
 } from '@/utils/validators';
 
 describe('e-mail', () => {
+  it('rejects emails above the input length limit', () => {
+    expect(validateEmailField(`${'a'.repeat(249)}@b.com`)).toBe('invalidEmail');
+    expect(validateEmailField(`${'a'.repeat(248)}@b.com`)).toBeNull();
+  });
   it.each(['ana@exemplo.com', '  Ana@Exemplo.COM  ', 'a.b+c@sub.dominio.com.br'])(
     'accepts %p',
     (value) => expect(isValidEmail(value)).toBe(true),

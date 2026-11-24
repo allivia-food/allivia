@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { RecipeImage } from '@/components/recipes/RecipeImage';
 import { RestaurantCard } from '@/components/restaurants/RestaurantCard';
-import { Button, Card, Icon, IconBadge, StateView } from '@/components/ui';
+import { Button, Card, HeaderLogo, Icon, IconBadge, StateView } from '@/components/ui';
 import { FEATURES } from '@/constants/features';
 import { allergenIcons, CUSTOM_ALLERGY_ICON, images } from '@/constants/icons';
 import { strings } from '@/constants/strings';
@@ -56,11 +56,14 @@ export default function HomeScreen() {
           />
         }
       >
-        <View>
-          <Text style={typography.screenTitle} accessibilityRole="header" testID="home-greeting">
-            {t.greeting(profile?.displayName ?? '')}
-          </Text>
-          <Text style={typography.subtitle}>{t.welcome}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md }}>
+          <View style={styles.flex}>
+            <Text style={typography.screenTitle} accessibilityRole="header" testID="home-greeting">
+              {t.greeting(profile?.displayName ?? '')}
+            </Text>
+            <Text style={typography.subtitle}>{t.welcome}</Text>
+          </View>
+          <HeaderLogo />
         </View>
 
         <Card variant="orange" style={styles.scanner}>
@@ -129,7 +132,11 @@ export default function HomeScreen() {
           </View>
         ) : recipe.data ? (
           <Card style={styles.recipeCard} testID="home-recipe">
-            <RecipeImage uri={recipe.data.imageUrl} style={styles.recipeImage} />
+            <RecipeImage
+              uri={recipe.data.imageUrl}
+              recipeTitle={recipe.data.title}
+              style={styles.recipeImage}
+            />
             <View style={styles.recipeBody}>
               <Text style={typography.sectionTitle} numberOfLines={2}>
                 {recipe.data.title}

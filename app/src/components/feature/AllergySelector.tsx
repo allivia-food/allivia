@@ -11,7 +11,7 @@ import {
   validateCustomAllergy,
 } from '@/features/onboarding/selection';
 import { colors, layout, opacity, radius, sizes, spacing, typography } from '@/theme';
-import { normalizeDisplayName } from '@/utils/validators';
+import { CUSTOM_ALLERGY_MAX, normalizeDisplayName } from '@/utils/validators';
 
 export interface AllergySelectorProps {
   allergies: AllergenId[];
@@ -29,10 +29,23 @@ export function AllergySelector({ allergies, customAllergies, onChange }: Allerg
   const [draft, setDraft] = useState('');
   const [draftTouched, setDraftTouched] = useState(false);
 
-  const tiles: Tile[] = [
+  const allTiles: Tile[] = [
     ...ALLERGENS.map((a) => ({ kind: 'catalog' as const, id: a.id, label: a.label })),
     ...customAllergies.map((label) => ({ kind: 'custom' as const, label })),
   ];
+  const selected = allTiles.filter((t) => t.kind === 'custom' || allergies.includes(t.id));
+  selected.sort((a, b) =>
+    a.kind === 'custom'
+      ? b.kind === 'custom'
+        ? customAllergies.indexOf(b.label) - customAllergies.indexOf(a.label)
+        : -1
+      : b.kind === 'custom'
+        ? 1
+        : 0,
+  );
+  const remaining = allTiles.filter((t) => t.kind === 'catalog' && !allergies.includes(t.id));
+  const ordered = [...selected, ...remaining];
+  const tiles = ordered.slice(0, Math.max(8, selected.length));
   const rows: Tile[][] = [];
   for (let i = 0; i < tiles.length; i += 2) rows.push(tiles.slice(i, i + 2));
 
@@ -108,8 +121,12 @@ export function AllergySelector({ allergies, customAllergies, onChange }: Allerg
           value={draft}
           onChangeText={setDraft}
           onBlur={() => setDraftTouched(true)}
-          error={draftTouched && draftError ? strings.customAllergyErrors[draftError] : undefined}
-          maxLength={60}
+          error={
+            (draftTouched || draft.length > 0) && draftError
+              ? strings.customAllergyErrors[draftError]
+              : undefined
+          }
+          maxLength={CUSTOM_ALLERGY_MAX}
           autoFocus
           returnKeyType="done"
           onSubmitEditing={confirmDraft}
@@ -143,7 +160,12 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     paddingHorizontal: spacing.xl,
   },
-  addText: { ...typography.input, color: colors.textPlaceholder },
+  addText: {
+    ...typography.input,
+    color: colors.textPlaceholder,
+    flexShrink: 1,
+    paddingVertical: spacing.sm,
+  },
   pressed: { opacity: opacity.pressed },
   disabled: { opacity: opacity.disabled },
   limit: { ...typography.caption, color: colors.textSecondary },

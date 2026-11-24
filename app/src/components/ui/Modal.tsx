@@ -8,7 +8,10 @@ import {
   View,
   type ImageSourcePropType,
   Image,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { strings } from '@/constants/strings';
 import { colors, radius, sizes, spacing, typography } from '@/theme';
@@ -34,6 +37,7 @@ export function Modal({
   variant = 'center',
   testID,
 }: ModalProps) {
+  const insets = useSafeAreaInsets();
   return (
     <NativeModal
       visible={visible}
@@ -41,9 +45,18 @@ export function Modal({
       animationType={variant === 'sheet' ? 'slide' : 'fade'}
       onRequestClose={onClose}
       statusBarTranslucent
+      navigationBarTranslucent
       testID={testID}
     >
-      <View style={[styles.overlay, variant === 'sheet' && styles.overlaySheet]}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={[
+          styles.overlay,
+          variant === 'sheet' && styles.overlaySheet,
+          { paddingTop: insets.top + spacing.lg, paddingBottom: insets.bottom + spacing.lg },
+        ]}
+        testID={testID ? `${testID}-safe-area` : 'modal-safe-area'}
+      >
         <Pressable
           style={StyleSheet.absoluteFill}
           onPress={onClose}
@@ -65,7 +78,12 @@ export function Modal({
               testID={testID ? `${testID}-close` : 'modal-close'}
             />
           </View>
-          <ScrollView contentContainerStyle={styles.content} bounces={false}>
+          <ScrollView
+            contentContainerStyle={styles.content}
+            bounces={false}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+          >
             {title ? (
               <Text style={[typography.formTitle, styles.title]} accessibilityRole="header">
                 {title}
@@ -77,7 +95,7 @@ export function Modal({
             {children}
           </ScrollView>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </NativeModal>
   );
 }
@@ -95,6 +113,7 @@ const styles = StyleSheet.create({
     borderWidth: sizes.border,
     borderColor: colors.primary,
     maxHeight: sizes.modalMaxHeight,
+    flexShrink: 1,
   },
   center: { borderRadius: radius.modal },
   sheet: { borderTopLeftRadius: radius.modal, borderTopRightRadius: radius.modal },

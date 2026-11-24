@@ -34,6 +34,17 @@ const user = (metadata: Record<string, unknown>) => ({
 beforeEach(() => jest.clearAllMocks());
 
 describe('register', () => {
+  it('reports pending confirmation without writing a profile', async () => {
+    mockSignUp.mockResolvedValue({
+      data: { user: user({}), session: null },
+      error: null,
+    });
+    await expect(register('ana@exemplo.com', 'senha1234')).resolves.toEqual({
+      profileSaved: false,
+      confirmationRequired: true,
+    });
+    expect(mockFrom).not.toHaveBeenCalled();
+  });
   it('creates the Auth user with the consent versions, then the profiles row', async () => {
     mockSignUp.mockImplementation(async ({ options }) => ({
       data: { user: user(options.data), session: { access_token: 'x' } },

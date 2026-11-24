@@ -90,6 +90,12 @@ beforeEach(() => {
 });
 
 describe('Receitas', () => {
+  it('hides the removed chicken recipe while keeping other recipes visible', async () => {
+    mockSearch.mockResolvedValue([recipe('old', { title: 'Frango com legumes' }), recipe('2')]);
+    await renderWithClient(<RecipesScreen />);
+    expect(await screen.findByText('Receita 2')).toBeTruthy();
+    expect(screen.queryByText('Frango com legumes')).toBeNull();
+  });
   it('shows the featured recipe and the list, with the profile "without" text', async () => {
     mockSearch.mockResolvedValue([recipe('1'), recipe('2'), recipe('3')]);
     await renderWithClient(<RecipesScreen />);
@@ -186,14 +192,28 @@ describe('Receita aberta', () => {
     expect(screen.queryByText(/Dificuldade/)).toBeNull();
   });
 
-  it('a synonym in the ingredients turns the banner red', async () => {
+  it('blocks direct access when the ingredients contain an allergy synonym', async () => {
     mockParams = { id: '1' };
     mockGet.mockResolvedValue(recipe('1', { ingredients: ['2 colheres de manteiga'] }));
     await renderWithClient(<RecipeScreen />);
-    expect(await screen.findByTestId('safety-danger')).toBeTruthy();
-    expect(screen.getByText('Atenção! Esta receita pode conter: Leite')).toBeTruthy();
-    expect(screen.queryByText(/Segura/)).toBeNull();
-    expect(screen.getByText(/Sempre leia os ingredientes e rótulos/)).toBeTruthy();
+    expect(await screen.findByText('Não encontramos esta receita.')).toBeTruthy();
+    expect(screen.queryByText(/2 colheres de manteiga/)).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Salvar receita' })).toBeNull();
+  });
+
+  it('does not retain an open recipe when profile allergies change', async () => {
+    mockParams = { id: '1' };
+    useProfileStore.getState().setProfile({ ...profile, allergies: [] });
+    mockGet.mockResolvedValue(
+      recipe('1', { allergens: ['milk'], ingredients: ['1 xícara de leite'] }),
+    );
+    await renderWithClient(<RecipeScreen />);
+    await screen.findByText(/1 xícara de leite/);
+    await act(async () => {
+      useProfileStore.getState().setProfile(profile);
+    });
+    expect(await screen.findByText('Não encontramos esta receita.')).toBeTruthy();
+    expect(screen.queryByText(/1 xícara de leite/)).toBeNull();
   });
 
   it('a recipe not reviewed is yellow', async () => {
@@ -237,6 +257,19 @@ describe('Receita aberta', () => {
 });
 
 describe('Seus salvos', () => {
+  it('hides incompatible saved recipes without deleting the bookmarks', async () => {
+    mockSaved.mockResolvedValue([
+      { recipe: recipe('blocked', { allergens: ['milk'] }), savedAt: '2026-10-01' },
+      { recipe: recipe('custom', { ingredients: ['1 kiwi'] }), savedAt: '2026-10-01' },
+      { recipe: recipe('allowed'), savedAt: '2026-10-01' },
+    ]);
+    useProfileStore.getState().setProfile({ ...profile, customAllergies: ['Kiwi'] });
+    await renderWithClient(<SavedScreen />);
+    await screen.findByText('Receita allowed');
+    expect(screen.queryByText('Receita blocked')).toBeNull();
+    expect(screen.queryByText('Receita custom')).toBeNull();
+    expect(mockUnsave).not.toHaveBeenCalled();
+  });
   it('removing shows "Receita removida" and "Desfazer" saves it again', async () => {
     const saved: SavedRecipe[] = [{ recipe: recipe('1'), savedAt: '2026-10-01' }];
     mockSaved.mockResolvedValue(saved);

@@ -12,6 +12,7 @@ import {
   mapOffTags,
   normalizeOffResponse,
   PRODUCT_TIMEOUT_MS,
+  recordScan,
   splitIngredients,
 } from '@/services/products';
 import { TimeoutError } from '@/utils/withTimeout';
@@ -21,6 +22,51 @@ jest.mock('@/services/supabase', () => ({
   getSupabase: () => ({ from: mockFrom }),
   isSupabaseConfigured: true,
 }));
+
+describe('scan history recording', () => {
+  const mockInsert = jest.fn();
+  const mockUpdate = jest.fn();
+  const mockSelect = jest.fn();
+  const mockEq = jest.fn();
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    const query = { eq: mockEq, select: mockSelect };
+    mockEq.mockReturnValue(query);
+    mockUpdate.mockReturnValue(query);
+    mockFrom.mockReturnValue({ update: mockUpdate, insert: mockInsert });
+    mockInsert.mockResolvedValue({ error: null });
+  });
+
+  it('refreshes an existing food without inserting another entry', async () => {
+    mockSelect.mockResolvedValue({ data: [{ id: 'scan1' }], error: null });
+    const before = Date.now();
+    await recordScan('u1', '7891000100103', 'Leite', 'contains', ['milk']);
+    expect(mockEq).toHaveBeenCalledWith('user_id', 'u1');
+    expect(mockEq).toHaveBeenCalledWith('barcode', '7891000100103');
+    expect(mockUpdate).toHaveBeenCalledWith({
+      product_name: 'Leite',
+      verdict: 'contains',
+      matched_allergens: ['milk'],
+      scanned_at: expect.any(String),
+    });
+    expect(Date.parse(mockUpdate.mock.calls[0][0].scanned_at)).toBeGreaterThanOrEqual(before);
+    expect(mockInsert).not.toHaveBeenCalled();
+  });
+
+  it('inserts a food on its first scan', async () => {
+    mockSelect.mockResolvedValue({ data: [], error: null });
+    await recordScan('u1', '7891000100103', 'Leite', 'safe', []);
+    expect(mockInsert).toHaveBeenCalledWith({
+      user_id: 'u1',
+      barcode: '7891000100103',
+      product_name: 'Leite',
+      verdict: 'safe',
+      matched_allergens: [],
+      scanned_at: expect.any(String),
+    });
+  });
+});
 
 describe('check digit', () => {
   it.each([

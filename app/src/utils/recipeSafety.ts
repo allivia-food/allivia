@@ -24,6 +24,10 @@ export interface SafetyResult {
   labels: string[];
 }
 
+export function isRecipeCompatible(recipe: SafetyInput, profile: SafetyProfile | null): boolean {
+  return profile !== null && computeSafety(recipe, profile).level !== 'danger';
+}
+
 const labelOf = (id: AllergenId) => ALLERGENS.find((a) => a.id === id)?.label ?? id;
 
 export function computeSafety(recipe: SafetyInput, profile: SafetyProfile): SafetyResult {

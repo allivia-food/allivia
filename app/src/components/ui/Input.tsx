@@ -1,9 +1,18 @@
 import { useState, type Ref } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
+import {
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+  type TextInputProps,
+} from 'react-native';
 
 import type { IconName } from '@/constants/icons';
 import { strings } from '@/constants/strings';
 import { colors, opacity, radius, shadows, sizes, spacing, typography } from '@/theme';
+import { EMAIL_MAX_LENGTH, PASSWORD_MAX_LENGTH } from '@/utils/validators';
 
 import { Icon } from './Icon';
 
@@ -49,6 +58,11 @@ export function Input({
         ) : null}
         <TextInput
           ref={ref}
+          maxLength={secure ? PASSWORD_MAX_LENGTH : EMAIL_MAX_LENGTH}
+          maxFontSizeMultiplier={Platform.OS === 'android' ? 1.3 : undefined}
+          autoCorrect={secure ? false : undefined}
+          spellCheck={secure ? false : undefined}
+          autoCapitalize={secure ? 'none' : undefined}
           {...rest}
           placeholder={placeholder}
           accessibilityLabel={accessibilityLabel ?? placeholder}
@@ -111,6 +125,9 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     paddingLeft: spacing.inputTextLeft,
     paddingRight: spacing.lg,
+    paddingVertical: spacing.md,
+    minWidth: 0,
+    textAlignVertical: 'center',
     ...typography.input,
     outlineWidth: 0,
   },

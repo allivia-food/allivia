@@ -14,6 +14,7 @@ export interface Profile {
   id: string;
   email: string;
   displayName: string;
+  avatarPath?: string | null;
   allergies: AllergenId[];
   customAllergies: string[];
   preferences: PreferenceId[];
@@ -27,6 +28,7 @@ interface ProfileRow {
   id: string;
   email: string;
   display_name: string;
+  avatar_path: string | null;
   allergies: AllergenId[];
   custom_allergies: string[];
   preferences: PreferenceId[];
@@ -37,13 +39,14 @@ interface ProfileRow {
 }
 
 const COLUMNS =
-  'id, email, display_name, allergies, custom_allergies, preferences, onboarding_completed, onboarding_step, is_premium, subscription';
+  'id, avatar_path, email, display_name, allergies, custom_allergies, preferences, onboarding_completed, onboarding_step, is_premium, subscription';
 
 function toProfile(row: ProfileRow): Profile {
   return {
     id: row.id,
     email: row.email,
     displayName: row.display_name,
+    avatarPath: row.avatar_path ?? null,
     allergies: row.allergies ?? [],
     customAllergies: row.custom_allergies ?? [],
     preferences: row.preferences ?? [],
@@ -81,7 +84,8 @@ async function update(userId: string, values: Partial<ProfileRow>): Promise<Prof
 
 export type OnboardingStepData =
   | { step: 1; displayName: string }
-  | { step: 2; allergies: AllergenId[]; customAllergies: string[] };
+  | { step: 2; allergies: AllergenId[]; customAllergies: string[] }
+  | { step: 3; preferences: PreferenceId[] };
 
 export function saveOnboardingStep(
   userId: string,
@@ -92,6 +96,7 @@ export function saveOnboardingStep(
   if (data.step === 1) {
     return update(userId, { display_name: data.displayName, onboarding_step });
   }
+  if (data.step === 3) return update(userId, { preferences: data.preferences, onboarding_step });
   return update(userId, {
     allergies: data.allergies,
     custom_allergies: data.customAllergies,
@@ -131,4 +136,8 @@ export function saveSubscription(
 export async function deleteAccount(): Promise<void> {
   const { error } = await withTimeout(getSupabase().rpc('delete_own_account'));
   if (error) throw error;
+}
+
+export function updateAvatar(userId: string, avatarPath: string): Promise<Profile> {
+  return update(userId, { avatar_path: avatarPath });
 }

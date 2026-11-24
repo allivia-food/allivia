@@ -6,7 +6,7 @@ module.exports = defineConfig([
   expoConfig,
   prettierRecommended,
   {
-    ignores: ['dist/**', '.expo/**', 'node_modules/**', 'expo-env.d.ts'],
+    ignores: ['dist/**', '.expo/**', '.cache/**', 'node_modules/**', 'expo-env.d.ts'],
   },
   {
     files: ['**/*.ts', '**/*.tsx'],

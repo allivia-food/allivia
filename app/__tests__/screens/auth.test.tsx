@@ -40,6 +40,18 @@ beforeEach(() => {
 });
 
 describe('Login', () => {
+  it('offers email verification when Supabase rejects an unconfirmed account', async () => {
+    mockLogin.mockRejectedValue(new AuthApiError('Email unconfirmed', 400, 'email_not_confirmed'));
+    await render(<LoginScreen />);
+    await fireEvent.changeText(screen.getByTestId('login-email'), 'ana@exemplo.com');
+    await fireEvent.changeText(screen.getByTestId('login-password'), 'Senha1234');
+    await fireEvent.press(screen.getByTestId('login-submit'));
+    await fireEvent.press(await screen.findByText('Confirmar meu e-mail'));
+    expect(mockRouter.push).toHaveBeenCalledWith({
+      pathname: '/verify-email',
+      params: { kind: 'signup', email: 'ana@exemplo.com' },
+    });
+  });
   it('keeps "Entrar" disabled until a valid e-mail and a password are typed', async () => {
     await render(<LoginScreen />);
     const submit = screen.getByTestId('login-submit');
@@ -84,6 +96,19 @@ async function fillValidRegister() {
 }
 
 describe('Cadastro', () => {
+  it('opens signup verification and clears the password when confirmation is required', async () => {
+    mockRegister.mockResolvedValue({ profileSaved: false, confirmationRequired: true });
+    await render(<RegisterScreen />);
+    await fillValidRegister();
+    await fireEvent.press(screen.getByTestId('register-terms'));
+    await fireEvent.press(screen.getByTestId('register-privacy'));
+    await fireEvent.press(screen.getByTestId('register-submit'));
+    expect(mockRouter.push).toHaveBeenCalledWith({
+      pathname: '/verify-email',
+      params: { kind: 'signup', email: 'ana@exemplo.com' },
+    });
+    expect(screen.getByTestId('register-password').props.value).toBe('');
+  });
   it('cannot create the account without both checkboxes (none pre-checked)', async () => {
     await render(<RegisterScreen />);
     expect(screen.getByTestId('register-terms')).not.toBeChecked();
@@ -117,7 +142,7 @@ describe('Cadastro', () => {
     await render(<RegisterScreen />);
     await fireEvent.changeText(screen.getByTestId('register-password'), 'senha1234');
     await fireEvent.changeText(screen.getByTestId('register-confirmation'), 'senha123');
-    await fireEvent(screen.getByTestId('register-confirmation'), 'blur');
+
     expect(screen.getByText('As senhas não são iguais.')).toBeTruthy();
   });
 
@@ -155,14 +180,17 @@ describe('Cadastro', () => {
 });
 
 describe('Recuperar senha', () => {
-  it('always moves to "Solicitação enviada" after a successful request', async () => {
+  it('moves to the code screen with a neutral recovery flow after a successful request', async () => {
     mockReset.mockResolvedValue(undefined);
     await render(<ForgotPasswordScreen />);
-    expect(screen.getByText('Enviar instruções')).toBeTruthy();
+    expect(screen.getByText('Enviar código')).toBeTruthy();
     await fireEvent.changeText(screen.getByTestId('forgot-email'), 'qualquer@exemplo.com');
     await fireEvent.press(screen.getByTestId('forgot-submit'));
     expect(mockReset).toHaveBeenCalledWith('qualquer@exemplo.com');
-    expect(mockRouter.push).toHaveBeenCalledWith('/request-sent');
+    expect(mockRouter.push).toHaveBeenCalledWith({
+      pathname: '/verify-email',
+      params: { kind: 'recovery', email: 'qualquer@exemplo.com' },
+    });
   });
 
   it('without internet shows the network error and does not navigate', async () => {

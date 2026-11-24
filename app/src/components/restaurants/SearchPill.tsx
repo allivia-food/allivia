@@ -1,4 +1,4 @@
-import { StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
+import { Platform, StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 
 import { Icon } from '@/components/ui';
 import { colors, layout, radius, shadows, sizes, spacing, typography } from '@/theme';
@@ -12,6 +12,8 @@ export function SearchPill({ placeholder, ...rest }: SearchPillProps) {
     <View style={styles.pill}>
       <Icon name="search" size={sizes.icon} color={colors.textSecondary} />
       <TextInput
+        maxLength={200}
+        maxFontSizeMultiplier={Platform.OS === 'android' ? 1.3 : undefined}
         {...rest}
         placeholder={placeholder}
         accessibilityLabel={placeholder}
@@ -35,7 +37,7 @@ const styles = StyleSheet.create({
     ...shadows.card,
   },
   input: {
-    ...typography.searchText,
+    ...typography.body,
     flex: 1,
     minWidth: 0,
     paddingVertical: spacing.sm,

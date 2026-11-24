@@ -39,7 +39,10 @@ export default function ForgotPasswordScreen() {
       await requestPasswordReset(email);
       markResetSent();
       setCooldown(resetCooldownLeft());
-      router.push('/request-sent');
+      router.push({
+        pathname: '/verify-email',
+        params: { kind: 'recovery', email: normalizeEmail(email) },
+      });
     } catch (error) {
       if (__DEV__) console.warn('[forgot-password]', error);
       setSubmitError(authErrorMessage(error));
@@ -64,7 +67,7 @@ export default function ForgotPasswordScreen() {
             setEmail((v) => normalizeEmail(v));
             setTouched(true);
           }}
-          error={touched ? fieldErrorMessage('email', emailError) : undefined}
+          error={touched || email.length > 0 ? fieldErrorMessage('email', emailError) : undefined}
           onPrimary
           keyboardType="email-address"
           autoCapitalize="none"

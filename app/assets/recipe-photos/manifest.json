@@ -1,0 +1,247 @@
+[
+  {
+    "source_key": "pdf:recipe:3",
+    "title": "Panqueca de banana e aveia",
+    "file": "Panqueca de banana e aveia.png",
+    "credit": null,
+    "source_url": null
+  },
+  {
+    "source_key": "pdf:recipe:4",
+    "title": "Cuscuz de milho com legumes",
+    "file": "Cuscuz de milho com legumes.png",
+    "credit": null,
+    "source_url": null
+  },
+  {
+    "source_key": "pdf:recipe:5",
+    "title": "Tapioca com tomate",
+    "file": "Tapioca com tomate.png",
+    "credit": null,
+    "source_url": null
+  },
+  {
+    "source_key": "pdf:recipe:6",
+    "title": "Bolo de banana com aveia",
+    "file": "Bolo de banana com aveia.png",
+    "credit": null,
+    "source_url": null
+  },
+  {
+    "source_key": "pdf:recipe:7",
+    "title": "Vitamina de morango e banana",
+    "file": "Vitamina de morango e banana.png",
+    "credit": null,
+    "source_url": null
+  },
+  {
+    "source_key": "pdf:recipe:8",
+    "title": "Bolo de fubá",
+    "file": "Bolo de fubá.png",
+    "credit": null,
+    "source_url": null
+  },
+  {
+    "source_key": "pdf:recipe:9",
+    "title": "Biscoito de banana e coco",
+    "file": "Biscoito de banana e coco.png",
+    "credit": null,
+    "source_url": null
+  },
+  {
+    "source_key": "pdf:recipe:10",
+    "title": "Pão de queijo caseiro",
+    "file": "Pão de queijo caseiro.png",
+    "credit": null,
+    "source_url": null
+  },
+  {
+    "source_key": "pdf:recipe:12",
+    "title": "Bolo de laranja com farinha de arroz",
+    "file": "Bolo de laranja com farinha de arroz.png",
+    "credit": null,
+    "source_url": null
+  },
+  {
+    "source_key": "pdf:recipe:13",
+    "title": "Smoothie bowl de banana e morango",
+    "file": "Smoothie bowl de banana e morango.png",
+    "credit": null,
+    "source_url": null
+  },
+  {
+    "source_key": "pdf:recipe:14",
+    "title": "Muffin salgado de legumes",
+    "file": "Muffin salgado de legumes.png",
+    "credit": null,
+    "source_url": null
+  },
+  {
+    "source_key": "pdf:recipe:15",
+    "title": "Sanduíche natural de ricota e cenoura",
+    "file": "Sanduíche natural de ricota e cenoura.png",
+    "credit": null,
+    "source_url": null
+  },
+  {
+    "source_key": "pdf:recipe:16",
+    "title": "Bolinho assado de batata com queijo",
+    "file": "Bolinho assado de batata com queijo.png",
+    "credit": null,
+    "source_url": null
+  },
+  {
+    "source_key": "pdf:recipe:17",
+    "title": "Pão de frigideira com ervas",
+    "file": "Pão de frigideira com ervas.png",
+    "credit": null,
+    "source_url": null
+  },
+  {
+    "source_key": "pdf:recipe:18",
+    "title": "Bolinho de maçã e canela",
+    "file": "Bolinho de maçã e canela.png",
+    "credit": null,
+    "source_url": null
+  },
+  {
+    "source_key": "pdf:recipe:19",
+    "title": "Chips de batata-doce assados",
+    "file": "Chips de batata-doce assados.png",
+    "credit": null,
+    "source_url": null
+  },
+  {
+    "source_key": "pdf:recipe:20",
+    "title": "Bolinho de arroz assado",
+    "file": "Bolinho de arroz assado.png",
+    "credit": null,
+    "source_url": null
+  },
+  {
+    "source_key": "pdf:recipe:21",
+    "title": "Pão de queijo de frigideira",
+    "file": "Pão de queijo de frigideira.png",
+    "credit": null,
+    "source_url": null
+  },
+  {
+    "source_key": "pdf:recipe:22",
+    "title": "Panqueca de farinha de arroz com legumes",
+    "file": "Panqueca de farinha de arroz com legumes.png",
+    "credit": null,
+    "source_url": null
+  },
+  {
+    "source_key": "pdf:recipe:24",
+    "title": "Homus com palitos de cenoura e pepino",
+    "file": "Homus com palitos de cenoura e pepino.png",
+    "credit": null,
+    "source_url": null
+  },
+  {
+    "source_key": "pdf:recipe:27",
+    "title": "Torrada com pasta de abacate e tomate",
+    "file": "Torrada com pasta de abacate e tomate.png",
+    "credit": null,
+    "source_url": null
+  },
+  {
+    "source_key": "pdf:recipe:28",
+    "title": "Lasanha de abobrinha e beringela",
+    "file": "Lasanha de abobrinha e beringela.png",
+    "credit": null,
+    "source_url": null
+  },
+  {
+    "source_key": "pdf:recipe:29",
+    "title": "Strogonoff de palmito e cogumelo",
+    "file": "Strogonoff de palmito e cogumelo.png",
+    "credit": null,
+    "source_url": null
+  },
+  {
+    "source_key": "pdf:recipe:30",
+    "title": "Abobrinha recheada com ricota e espinafre",
+    "file": "Abobrinha recheada com ricota e espinafre.png",
+    "credit": null,
+    "source_url": null
+  },
+  {
+    "source_key": "pdf:recipe:31",
+    "title": "Torta de legumes no liquidificador",
+    "file": "Torta de legumes no liquidificador.png",
+    "credit": null,
+    "source_url": null
+  },
+  {
+    "source_key": "pdf:recipe:32",
+    "title": "Escondidinho de carne moída com batata",
+    "file": "Escondidinho de carne moída com batata.png",
+    "credit": null,
+    "source_url": null
+  },
+  {
+    "source_key": "pdf:recipe:33",
+    "title": "Ratatouille de legumes",
+    "file": "Ratatouille de legumes.png",
+    "credit": null,
+    "source_url": null
+  },
+  {
+    "source_key": "pdf:recipe:34",
+    "title": "Paella vegana",
+    "file": "Paella vegana.png",
+    "credit": null,
+    "source_url": null
+  },
+  {
+    "source_key": "pdf:recipe:48",
+    "title": "Mousse de maracujá",
+    "file": "Mousse de maracujá.png",
+    "credit": null,
+    "source_url": null
+  },
+  {
+    "source_key": "pdf:recipe:49",
+    "title": "Brownie de chocolate",
+    "file": "Brownie de chocolate.png",
+    "credit": null,
+    "source_url": null
+  },
+  {
+    "source_key": "pdf:recipe:50",
+    "title": "Pudim de leite condensado",
+    "file": "Pudim de leite condensado.png",
+    "credit": null,
+    "source_url": null
+  },
+  {
+    "source_key": "pdf:recipe:51",
+    "title": "Mousse de chocolate",
+    "file": "Mousse de chocolate.png",
+    "credit": null,
+    "source_url": null
+  },
+  {
+    "source_key": "pdf:recipe:52",
+    "title": "Brigadeiro sem lactose",
+    "file": "Brigadeiro sem lactose.png",
+    "credit": null,
+    "source_url": null
+  },
+  {
+    "source_key": "pdf:recipe:53",
+    "title": "Sorvete de banana e morango",
+    "file": "Sorvete de banana e morango.png",
+    "credit": null,
+    "source_url": null
+  },
+  {
+    "source_key": "pdf:recipe:54",
+    "title": "Cocada de forno",
+    "file": "Cocada de forno.png",
+    "credit": null,
+    "source_url": null
+  }
+]

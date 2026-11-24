@@ -16,14 +16,16 @@ export function onboardingStepToResume(completedSteps: number): number {
   return Math.min(Math.max(completedSteps + 1, 1), ONBOARDING_STEPS);
 }
 
-export type RootHref = '/welcome' | '/step-1' | '/step-2' | '/step-3' | '/home';
+export type RootHref = '/welcome' | '/step-1' | '/step-2' | '/step-3' | '/permissions' | '/home';
 
 export function routeForStatus(status: ResolvedStatus, completedSteps = 0): RootHref {
   switch (status) {
     case 'signedOut':
       return '/welcome';
     case 'onboarding':
-      return `/step-${onboardingStepToResume(completedSteps)}` as RootHref;
+      return completedSteps >= 3
+        ? '/permissions'
+        : (`/step-${onboardingStepToResume(completedSteps)}` as RootHref);
     case 'ready':
       return '/home';
   }

@@ -1,3 +1,5 @@
+export type PaymentMethod = 'card' | 'pix' | 'debit';
+
 export type PlanId = 'annual' | 'monthly';
 
 export interface Subscription {
@@ -43,4 +45,13 @@ export function renewedSubscription(sub: Subscription, now = new Date()): Subscr
   if (Number.isNaN(renewsAt.getTime()) || renewsAt > now) return null;
   while (renewsAt <= now) renewsAt = addPeriod(renewsAt, sub.plan);
   return { ...sub, renewsAt: renewsAt.toISOString() };
+}
+
+export function hasPremium(
+  profile: { isPremium: boolean; subscription?: Subscription | null } | null,
+  now = new Date(),
+): boolean {
+  if (!profile?.isPremium) return false;
+  const sub = profile.subscription;
+  return !sub || sub.status !== 'canceled' || Date.parse(sub.renewsAt) > now.getTime();
 }

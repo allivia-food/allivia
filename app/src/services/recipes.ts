@@ -6,10 +6,16 @@ import { withTimeout } from '@/utils/withTimeout';
 import { getSupabase } from './supabase';
 
 export interface Recipe {
+  yieldLabel?: string | null;
+  calorieBasis?: string | null;
+  sourceReference?: string | null;
+  difficulty?: string | null;
   id: string;
   title: string;
   description: string | null;
   imageUrl: string | null;
+  imageCredit?: string | null;
+  imageSourceUrl?: string | null;
   mealTypes: MealType[];
   readyInMinutes: number;
   servings: number;
@@ -27,10 +33,16 @@ export interface Recipe {
 }
 
 interface RecipeRow {
+  yield_label?: string | null;
+  calorie_basis?: string | null;
+  source_reference?: string | null;
+  difficulty?: string | null;
   id: string;
   title: string;
   description: string | null;
   image_url: string | null;
+  image_credit?: string | null;
+  image_source_url?: string | null;
   meal_types: MealType[];
   ready_in_minutes: number;
   servings: number;
@@ -48,7 +60,7 @@ interface RecipeRow {
 }
 
 const COLUMNS =
-  'id, title, description, image_url, meal_types, ready_in_minutes, servings, ingredients, steps, allergens, diets, calories_kcal, protein_g, carbs_g, fat_g, tip, allergens_reviewed, featured';
+  'id, title, description, image_url, image_credit, image_source_url, meal_types, ready_in_minutes, servings, ingredients, steps, allergens, diets, calories_kcal, protein_g, carbs_g, fat_g, tip, allergens_reviewed, featured, yield_label, calorie_basis, source_reference, difficulty';
 
 const num = (v: number | string | null) => (v === null ? null : Number(v));
 
@@ -56,8 +68,14 @@ export function toRecipe(row: RecipeRow): Recipe {
   return {
     id: row.id,
     title: row.title,
+    yieldLabel: row.yield_label,
+    calorieBasis: row.calorie_basis,
+    sourceReference: row.source_reference,
+    difficulty: row.difficulty,
     description: row.description,
     imageUrl: row.image_url,
+    imageCredit: row.image_credit,
+    imageSourceUrl: row.image_source_url,
     mealTypes: row.meal_types ?? [],
     readyInMinutes: row.ready_in_minutes,
     servings: row.servings,

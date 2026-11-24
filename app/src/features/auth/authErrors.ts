@@ -45,5 +45,14 @@ const MESSAGE_BY_KIND: Record<AuthErrorKind, string> = {
 };
 
 export function authErrorMessage(error: unknown): string {
+  if (error && typeof error === 'object' && 'code' in error && error.code === 'email_not_confirmed')
+    return 'Confirme seu e-mail para entrar na conta.';
+  if (
+    error &&
+    typeof error === 'object' &&
+    'code' in error &&
+    error.code === 'email_address_not_authorized'
+  )
+    return 'O envio de e-mails ainda não está configurado. Entre em contato com o suporte.';
   return MESSAGE_BY_KIND[authErrorKind(error)];
 }

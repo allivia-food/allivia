@@ -3,9 +3,9 @@ import { StyleSheet, Text, View } from 'react-native';
 import { RecipeImage } from '@/components/recipes/RecipeImage';
 import { Card, Icon } from '@/components/ui';
 import { strings } from '@/constants/strings';
+import { getRestaurantPhotos } from '@/constants/restaurantPhotos';
 import {
   allergenFreeText,
-  formatDistance,
   type RankedRestaurant,
   type Restaurant,
 } from '@/features/restaurants/rules';
@@ -36,7 +36,7 @@ export function RestaurantCard({
   onSaveError,
   onRemoved,
 }: RestaurantCardProps) {
-  const { restaurant, distance, covered } = item;
+  const { restaurant, covered } = item;
   const cuisine = strings.restaurants.categories[restaurant.cuisine];
   const freeText = allergenFreeText(hasAllergies ? covered : restaurant.allergenFriendly);
   return (
@@ -56,15 +56,17 @@ export function RestaurantCard({
       }
       actionStyle={styles.action}
     >
-      <RecipeImage uri={restaurant.image} style={styles.image} />
+      <RecipeImage
+        uri={restaurant.image}
+        localSource={getRestaurantPhotos(restaurant.name)[0]}
+        style={styles.image}
+      />
       <View style={styles.body}>
         <View style={styles.texts}>
           <Text style={typography.sectionTitle} numberOfLines={2}>
             {restaurant.name}
           </Text>
-          <Text style={typography.bodySmall}>
-            {strings.restaurants.meta(cuisine, distance === null ? null : formatDistance(distance))}
-          </Text>
+          <Text style={typography.bodySmall}>{cuisine}</Text>
           {freeText ? (
             <Text style={typography.bodySmall} numberOfLines={2}>
               {freeText}

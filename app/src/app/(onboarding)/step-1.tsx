@@ -8,7 +8,7 @@ import { strings } from '@/constants/strings';
 import { profileErrorMessage } from '@/features/profile/profileErrors';
 import { saveOnboardingStep } from '@/services/profile';
 import { useProfileStore } from '@/store/profile';
-import { normalizeDisplayName, validateDisplayName } from '@/utils/validators';
+import { DISPLAY_NAME_MAX, normalizeDisplayName, validateDisplayName } from '@/utils/validators';
 
 const t = strings.onboarding;
 
@@ -73,11 +73,13 @@ export default function OnboardingNameScreen() {
           setName((v) => normalizeDisplayName(v));
           setTouched(true);
         }}
-        error={touched && nameError ? strings.nameErrors[nameError] : undefined}
+        error={
+          (touched || name.length > 0) && nameError ? strings.nameErrors[nameError] : undefined
+        }
         autoCapitalize="words"
         autoComplete="name"
         textContentType="nickname"
-        maxLength={60}
+        maxLength={DISPLAY_NAME_MAX}
         returnKeyType="next"
         onSubmitEditing={next}
         testID="step1-name"

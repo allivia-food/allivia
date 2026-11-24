@@ -11,7 +11,7 @@ export interface IconBadgeProps {
   icon: IconName;
   size?: IconBadgeSize;
   color?: string;
-  tone?: 'white' | 'green';
+  tone?: 'white' | 'green' | 'transparent';
   accessibilityLabel?: string;
 }
 
@@ -36,6 +36,7 @@ export function IconBadge({
         styles.circle,
         { width: d, height: d, borderRadius: d / 2 },
         tone === 'green' && styles.green,
+        tone === 'transparent' && styles.transparent,
       ]}
       accessible={Boolean(accessibilityLabel)}
       accessibilityLabel={accessibilityLabel}
@@ -47,6 +48,7 @@ export function IconBadge({
 }
 
 const styles = StyleSheet.create({
+  transparent: { backgroundColor: 'transparent' },
   green: { backgroundColor: colors.surfaceGreen },
   circle: {
     backgroundColor: colors.surface,

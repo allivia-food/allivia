@@ -1,6 +1,7 @@
 import type { ImageSourcePropType } from 'react-native';
 
 export const icons = {
+  camera: require('../../assets/icons/camera.svg'),
   arrowBack: require('../../assets/icons/arrow-back.png'),
   arrowBackWhite: require('../../assets/icons/arrow-back-white.png'),
   arrowRightWhite: require('../../assets/icons/arrow-right-white.png'),

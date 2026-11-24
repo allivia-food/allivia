@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { useState } from 'react';
 
 import { OnboardingLayout } from '@/components/feature/OnboardingLayout';
@@ -11,16 +12,15 @@ import {
   type PreferenceOption,
 } from '@/features/onboarding/selection';
 import { profileErrorMessage } from '@/features/profile/profileErrors';
-import { completeOnboarding } from '@/services/profile';
+import { saveOnboardingStep } from '@/services/profile';
 import { useProfileStore } from '@/store/profile';
-import { useSessionStore } from '@/store/session';
 
 const t = strings.onboarding;
 
 export default function OnboardingPreferencesScreen() {
   const profile = useProfileStore((s) => s.profile);
   const setProfile = useProfileStore((s) => s.setProfile);
-  const setStatus = useSessionStore((s) => s.setStatus);
+
   const [selected, setSelected] = useState<PreferenceOption[]>(
     preferencesToOptions(profile?.preferences ?? []),
   );
@@ -35,9 +35,14 @@ export default function OnboardingPreferencesScreen() {
     setSaving(true);
     setSaveError(null);
     try {
-      const saved = await completeOnboarding(current.id, preferencesToSave(selected));
+      const saved = await saveOnboardingStep(
+        current.id,
+        { step: 3, preferences: preferencesToSave(selected) },
+        current.onboardingStep,
+      );
       setProfile(saved);
-      setStatus('ready', saved.onboardingStep);
+      setSaving(false);
+      router.push('/permissions');
     } catch (error) {
       if (__DEV__) console.warn('[onboarding step 3]', error);
       setSaveError(profileErrorMessage(error, 'save'));
@@ -54,7 +59,7 @@ export default function OnboardingPreferencesScreen() {
         <>
           {saveError ? <Banner variant="error" title={saveError} testID="step3-error" /> : null}
           <Button
-            label={t.finish}
+            label="Próximo"
             rightIcon="arrowRightWhite"
             onPress={finish}
             loading={saving}

@@ -6,6 +6,7 @@ import { getProfile, onboardingStateOf } from '@/services/profile';
 import { useProfileStore } from '@/store/profile';
 import { getSupabase, isSupabaseConfigured } from '@/services/supabase';
 import { useSessionStore } from '@/store/session';
+import { withTimeout } from '@/utils/withTimeout';
 
 import { resolveStatus } from './sessionRouting';
 
@@ -29,6 +30,24 @@ async function applySession(session: Session | null) {
         }
       } catch (ensureError) {
         if (__DEV__) console.warn('[session] ensureProfile failed', ensureError);
+        if ((ensureError as { code?: string } | null)?.code === '23503') {
+          // A persisted JWT can outlive a deleted Auth user. Check with Auth
+          // before clearing it; a database failure alone is not proof.
+          const { data, error } = await withTimeout(getSupabase().auth.getUser());
+          if (id !== requestId || useSessionStore.getState().simulated) return;
+          if (error?.code === 'user_not_found' || (!error && !data.user)) {
+            const { error: signOutError } = await withTimeout(
+              getSupabase().auth.signOut({ scope: 'local' }),
+            );
+            if (signOutError) throw signOutError;
+            if (id !== requestId || useSessionStore.getState().simulated) return;
+            useProfileStore.getState().setProfile(null);
+            store.setStatus('signedOut');
+            return;
+          }
+          if (error) throw error;
+        }
+        throw ensureError;
       }
     }
     if (id !== requestId || useSessionStore.getState().simulated) return;

@@ -1,3 +1,4 @@
+import Permissions from '@/app/(onboarding)/permissions';
 import { fireEvent, render, screen } from '@testing-library/react-native';
 
 import type { Profile } from '@/services/profile';
@@ -126,25 +127,84 @@ describe('Passo 03', () => {
     expect(screen.getByTestId('preference-none')).toBeChecked();
   });
 
-  it('"Concluir" saves in one write and marks the session as ready', async () => {
-    mockComplete.mockImplementation(async (_id, prefs) => ({
+  it('saves preferences and continues without completing onboarding', async () => {
+    mockSaveStep.mockImplementation(async (_id, data) => ({
       ...baseProfile,
-      preferences: prefs,
+      preferences: data.preferences,
       onboardingStep: 3,
-      onboardingCompleted: true,
+      onboardingCompleted: false,
     }));
     await render(<Step3 />);
     await fireEvent.press(screen.getByTestId('preference-gluten_free'));
     await fireEvent.press(screen.getByTestId('step3-finish'));
-    expect(mockComplete).toHaveBeenCalledWith('u1', ['gluten_free']);
-    expect(useSessionStore.getState().status).toBe('ready');
+    expect(mockSaveStep).toHaveBeenCalledWith('u1', { step: 3, preferences: ['gluten_free'] }, 0);
+    expect(useSessionStore.getState().status).toBe('onboarding');
   });
 
   it('with nothing selected saves no preferences', async () => {
-    mockComplete.mockImplementation(async () => ({ ...baseProfile, onboardingCompleted: true }));
+    mockSaveStep.mockImplementation(async () => ({ ...baseProfile, onboardingCompleted: true }));
     await render(<Step3 />);
     expect(screen.getByTestId('step3-finish')).toBeEnabled();
     await fireEvent.press(screen.getByTestId('step3-finish'));
-    expect(mockComplete).toHaveBeenCalledWith('u1', []);
+    expect(mockSaveStep).toHaveBeenCalledWith('u1', { step: 3, preferences: [] }, 0);
   });
+});
+
+const mockCameraRequest = jest.fn();
+const mockLocationRequest = jest.fn();
+jest.mock('expo-camera', () => ({
+  Camera: { requestCameraPermissionsAsync: () => mockCameraRequest() },
+}));
+jest.mock('expo-location', () => ({
+  requestForegroundPermissionsAsync: () => mockLocationRequest(),
+}));
+describe('Permissions', () => {
+  beforeEach(() => {
+    mockComplete.mockResolvedValue({
+      ...baseProfile,
+      onboardingCompleted: true,
+      onboardingStep: 3,
+    });
+    mockCameraRequest.mockResolvedValue({ granted: false });
+    mockLocationRequest.mockResolvedValue({ granted: false });
+  });
+  it('starts selected and continues after denials', async () => {
+    await render(<Permissions />);
+    expect(screen.getByTestId('permission-camera')).toBeChecked();
+    expect(screen.getByTestId('permission-camera-check')).toBeTruthy();
+    await fireEvent.press(screen.getByTestId('permission-camera'));
+    expect(screen.queryByTestId('permission-camera-check')).toBeNull();
+    await fireEvent.press(screen.getByTestId('permission-camera'));
+    expect(screen.getByTestId('permission-location')).toBeChecked();
+    await fireEvent.press(screen.getByTestId('permissions-finish'));
+    expect(mockCameraRequest).toHaveBeenCalledTimes(1);
+    expect(mockLocationRequest).toHaveBeenCalledTimes(1);
+    expect(useSessionStore.getState().status).toBe('ready');
+  });
+  it('skips both prompts but saves the form', async () => {
+    await render(<Permissions />);
+    await fireEvent.press(screen.getByTestId('permissions-skip'));
+    expect(mockComplete).toHaveBeenCalledWith('u1', []);
+    expect(mockCameraRequest).not.toHaveBeenCalled();
+    expect(mockLocationRequest).not.toHaveBeenCalled();
+    expect(useSessionStore.getState().status).toBe('ready');
+  });
+  it('does not request permissions if saving fails', async () => {
+    mockComplete.mockRejectedValue(new Error('db'));
+    await render(<Permissions />);
+    await fireEvent.press(screen.getByTestId('permissions-finish'));
+    expect(mockCameraRequest).not.toHaveBeenCalled();
+    expect(useSessionStore.getState().status).toBe('onboarding');
+  });
+});
+
+it('keeps every selected allergy visible while custom additions displace unselected options', async () => {
+  useProfileStore
+    .getState()
+    .setProfile({ ...baseProfile, allergies: ['shellfish'], customAllergies: ['Coco'] });
+  await render(<Step2 />);
+  expect(screen.getByTestId('allergy-shellfish')).toBeChecked();
+  expect(screen.getByTestId('allergy-custom-Coco')).toBeChecked();
+  expect(screen.queryByTestId('allergy-expand')).toBeNull();
+  expect(screen.queryByTestId('allergy-fish')).toBeNull();
 });

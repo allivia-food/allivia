@@ -1,4 +1,4 @@
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { IconName } from '@/constants/icons';
 import { colors, opacity, radius, sizes, spacing, typography } from '@/theme';
@@ -71,7 +71,12 @@ export function Button({
         />
       ) : (
         <View style={styles.content}>
-          <Text style={textStyle}>{label}</Text>
+          <Text
+            style={[textStyle, styles.label]}
+            maxFontSizeMultiplier={Platform.OS === 'android' ? 1.3 : undefined}
+          >
+            {label}
+          </Text>
           {rightIcon ? (
             <Icon
               name={rightIcon}
@@ -92,10 +97,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: radius.pill,
     paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.sm,
   },
   large: { minHeight: sizes.buttonHeight },
   small: { minHeight: sizes.buttonSmallHeight, alignSelf: 'flex-start' },
-  content: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  content: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.md,
+    maxWidth: '100%',
+  },
+  label: { flexShrink: 1, textAlign: 'center' },
   pressed: { opacity: opacity.pressed },
   disabled: { opacity: opacity.disabled },
 });

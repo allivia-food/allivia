@@ -1,13 +1,16 @@
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export const PASSWORD_MIN_LENGTH = 8;
+export const PASSWORD_MAX_LENGTH = 1024;
+export const EMAIL_MAX_LENGTH = 254;
 
 export function normalizeEmail(value: string): string {
   return value.trim().toLowerCase();
 }
 
 export function isValidEmail(value: string): boolean {
-  return EMAIL_PATTERN.test(normalizeEmail(value));
+  const email = normalizeEmail(value);
+  return email.length <= EMAIL_MAX_LENGTH && EMAIL_PATTERN.test(email);
 }
 
 export interface PasswordRules {

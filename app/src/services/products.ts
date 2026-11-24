@@ -207,14 +207,31 @@ export async function recordScan(
   matchedAllergens: AllergenId[],
 ): Promise<void> {
   try {
+    const scan = {
+      product_name: productName,
+      verdict,
+      matched_allergens: matchedAllergens,
+      scanned_at: new Date().toISOString(),
+    };
+    const { data: existing, error: updateError } = await withTimeout(
+      getSupabase()
+        .from('scans')
+        .update(scan)
+        .eq('user_id', userId)
+        .eq('barcode', barcode)
+        .select('id'),
+    );
+    if (updateError) throw updateError;
+    if (existing?.length) return;
+
     const { error } = await withTimeout(
-      getSupabase().from('scans').insert({
-        user_id: userId,
-        barcode,
-        product_name: productName,
-        verdict,
-        matched_allergens: matchedAllergens,
-      }),
+      getSupabase()
+        .from('scans')
+        .insert({
+          user_id: userId,
+          barcode,
+          ...scan,
+        }),
     );
     if (error) throw error;
   } catch (error) {

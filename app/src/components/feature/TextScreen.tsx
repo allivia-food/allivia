@@ -11,7 +11,7 @@ export interface TextScreenProps {
   title: string;
   icon: IconName;
   paragraphs: readonly string[];
-  iconTone?: 'white' | 'green';
+  iconTone?: 'white' | 'green' | 'transparent';
   children?: ReactNode;
 }
 

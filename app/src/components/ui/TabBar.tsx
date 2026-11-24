@@ -26,8 +26,17 @@ export function TabBar({ active, onTabPress }: TabBarProps) {
   const insets = useSafeAreaInsets();
   return (
     <View
-      style={[styles.bar, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}
+      style={[
+        styles.bar,
+        {
+          paddingBottom: insets.bottom + spacing.md,
+          minHeight: sizes.tabBarHeight + insets.bottom,
+          paddingLeft: insets.left + spacing.xs,
+          paddingRight: insets.right + spacing.xs,
+        },
+      ]}
       accessibilityRole="tablist"
+      testID="app-tab-bar"
     >
       {TABS.map((tab) => {
         const selected = tab.key === active;
@@ -43,7 +52,13 @@ export function TabBar({ active, onTabPress }: TabBarProps) {
             style={styles.item}
           >
             <Icon name={tab.icon} size={sizes.iconTab} color={color} />
-            <Text style={[typography.tabLabel, { color }]} numberOfLines={1}>
+            <Text
+              style={[typography.tabLabel, styles.label, { color }]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.75}
+              maxFontSizeMultiplier={1.2}
+            >
               {tab.label}
             </Text>
           </Pressable>
@@ -68,8 +83,11 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   item: {
+    flex: 1,
+    minWidth: 0,
     alignItems: 'center',
     gap: spacing.xs,
     minHeight: sizes.touchTarget,
   },
+  label: { fontSize: 12, textAlign: 'center', alignSelf: 'stretch' },
 });

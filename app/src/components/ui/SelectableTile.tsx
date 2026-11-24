@@ -10,6 +10,7 @@ export interface SelectableTileProps {
   label: string;
   icon?: IconName;
   selected: boolean;
+  showCheck?: boolean;
   onPress: () => void;
   disabled?: boolean;
   onRemove?: () => void;
@@ -21,6 +22,7 @@ export function SelectableTile({
   label,
   icon,
   selected,
+  showCheck = false,
   onPress,
   disabled = false,
   onRemove,
@@ -45,9 +47,12 @@ export function SelectableTile({
     >
       <View style={styles.content}>
         {icon ? <Icon name={icon} size={sizes.iconButton} color={color} /> : null}
-        <Text style={[styles.label, { color }]} numberOfLines={2}>
-          {label}
-        </Text>
+        <Text style={[styles.label, { color }]}>{label}</Text>
+        {showCheck && selected ? (
+          <View testID={testID ? `${testID}-check` : undefined}>
+            <Icon name="check" size={sizes.iconSmall} color={color} />
+          </View>
+        ) : null}
         {onRemove ? (
           <View style={styles.remove}>
             <IconButton
@@ -73,6 +78,7 @@ const styles = StyleSheet.create({
     borderWidth: sizes.border,
     justifyContent: 'center',
     paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
     ...shadows.card,
   },
   selected: { backgroundColor: colors.surfaceOrange, borderColor: colors.primary },

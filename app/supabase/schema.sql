@@ -90,16 +90,22 @@ create table public.restaurants (
   id                 uuid primary key default gen_random_uuid(),
   name               text not null,
   address            text not null,
-  lat                double precision not null,
-  lng                double precision not null,
+  lat                double precision,
+  lng                double precision,
   cuisine            text not null
     check (cuisine in ('healthy', 'vegetarian', 'snacks', 'other')),
   allergen_friendly  text[] not null default '{}',
   rating             numeric(2, 1) check (rating is null or rating between 0 and 5),
   image              text,
   allergen_source    text,
+  description        text,
+  phone              text,
+  diets              text[] not null default '{}'
+    check (diets <@ array['lactose_free','gluten_free','vegetarian','vegan']::text[]),
+  source_key         text unique,
   active             boolean not null default true,
   created_at         timestamptz not null default now(),
+  constraint restaurants_coordinate_pair_check check ((lat is null) = (lng is null)),
   constraint restaurants_coordinates_check check (lat between -90 and 90 and lng between -180 and 180)
 );
 
@@ -176,6 +182,12 @@ create extension if not exists unaccent with schema extensions;
 create table public.recipes (
   id                  uuid primary key default gen_random_uuid(),
   title               text not null,
+  source_key          text unique,
+  import_pending      text,
+  source_reference    text,
+  yield_label         text,
+  calorie_basis       text,
+  difficulty          text,
   description         text,
   image_url           text,
   meal_types          text[] not null default '{}'
@@ -297,11 +309,8 @@ as $$
       and (p_max_minutes is null or r.ready_in_minutes <= p_max_minutes)
       and r.diets @> coalesce(p_diets, '{}')
   )
-  select c.id, c.title, c.description, c.image_url, c.meal_types, c.ready_in_minutes,
-         c.servings, c.ingredients, c.steps, c.allergens, c.diets, c.calories_kcal,
-         c.protein_g, c.carbs_g, c.fat_g, c.tip, c.allergens_reviewed, c.published,
-         c.featured, c.created_at, c.updated_at
-  from candidates c
+  select r.*
+  from candidates c join public.recipes r on r.id = c.id
   where not exists (select 1 from blocked_terms b where c.ingredients_text like '%' || b.term || '%')
     and not exists (
       select 1 from unnest(coalesce(p_include, '{}')) as i(term)
@@ -355,3 +364,79 @@ insert into public.allergens (id, label, synonyms) values
   ('soy',       'Soja',          array['soja','lecitina de soja','proteína de soja','shoyu']),
   ('fish',      'Peixes',        array['peixe','bacalhau','atum','salmão','sardinha','anchova']),
   ('shellfish', 'Frutos do mar', array['camarão','lagosta','caranguejo','siri','marisco','mexilhão','ostra','lula','polvo']);
+
+ALTER TABLE public.recipes
+  ADD COLUMN IF NOT EXISTS image_credit text,
+  ADD COLUMN IF NOT EXISTS image_source_url text;
+
+-- Executa com as permissões do usuário: o perfil continua protegido por RLS.
+create or replace function public.recipe_matches_profile(
+  p_allergens text[], p_ingredients text[]
+)
+returns boolean
+language sql
+stable
+security invoker
+set search_path = ''
+as $$
+  select exists (
+    select 1 from public.profiles p
+    where p.id = (select auth.uid())
+      and not (coalesce(p_allergens, '{}') && p.allergies)
+      and not exists (
+        select 1
+        from (
+          select s.term
+          from public.allergens a,
+               unnest(a.synonyms || array[a.label]) as s(term)
+          where a.id = any(p.allergies)
+          union
+          select unnest(p.custom_allergies)
+        ) blocked
+        where length(btrim(blocked.term)) > 0
+          and exists (
+            select 1 from unnest(coalesce(p_ingredients, '{}')) i(ingredient)
+            where strpos(
+              regexp_replace(extensions.unaccent(lower(i.ingredient)), '\s+', ' ', 'g'),
+              regexp_replace(extensions.unaccent(lower(btrim(blocked.term))), '\s+', ' ', 'g')
+            ) > 0
+          )
+      )
+  );
+$$;
+revoke execute on function public.recipe_matches_profile(text[], text[]) from public, anon;
+grant execute on function public.recipe_matches_profile(text[], text[]) to authenticated;
+
+-- Restritiva: também limita outras políticas permissivas de leitura existentes.
+drop policy if exists recipes_profile_allergies on public.recipes;
+create policy recipes_profile_allergies on public.recipes
+  as restrictive for select to authenticated
+  using (published and allergens_reviewed and public.recipe_matches_profile(allergens, ingredients));
+
+-- Os favoritos são preservados se o perfil mudar. Inserir um favorito novo exige
+-- que a receita esteja visível para o usuário naquele momento.
+drop policy if exists saved_recipes_compatible_write on public.saved_recipes;
+create policy saved_recipes_compatible_write on public.saved_recipes
+  as restrictive for all to authenticated
+  using (true)
+  with check (exists (select 1 from public.recipes r where r.id = saved_recipes.recipe_id));
+
+DO $$ BEGIN
+  IF to_regclass('storage.buckets') IS NOT NULL THEN
+    INSERT INTO storage.buckets(id, name, public, file_size_limit, allowed_mime_types)
+    VALUES ('recipe-images', 'recipe-images', true, 10485760,
+            array['image/jpeg','image/png','image/webp'])
+    ON CONFLICT(id) DO UPDATE SET public = true,
+      file_size_limit = excluded.file_size_limit,
+      allowed_mime_types = excluded.allowed_mime_types;
+  END IF;
+END $$;
+-- Uploads administrativos são feitos pelo script, sem conceder escrita pública.
+
+-- Profile photos: deploy before updating the app.
+alter table public.profiles add column if not exists avatar_path text;
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('avatars', 'avatars', false, 5242880, array['image/jpeg', 'image/png']) on conflict (id) do nothing;
+create policy avatars_owner on storage.objects for all to authenticated
+using (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text)
+with check (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text);

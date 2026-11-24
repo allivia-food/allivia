@@ -49,7 +49,15 @@ export default function RegisterScreen() {
     setLoading(true);
     setSubmitError(null);
     try {
-      await register(email, password);
+      const result = await register(email, password);
+      if (result.confirmationRequired) {
+        setPassword('');
+        setConfirmation('');
+        router.push({
+          pathname: '/verify-email',
+          params: { kind: 'signup', email: normalizeEmail(email) },
+        });
+      }
     } catch (error) {
       if (__DEV__) console.warn('[register]', error);
       setSubmitError({
@@ -78,7 +86,9 @@ export default function RegisterScreen() {
             setEmail((v) => normalizeEmail(v));
             setTouched((s) => ({ ...s, email: true }));
           }}
-          error={touched.email ? fieldErrorMessage('email', emailError) : undefined}
+          error={
+            touched.email || email.length > 0 ? fieldErrorMessage('email', emailError) : undefined
+          }
           onPrimary
           keyboardType="email-address"
           autoCapitalize="none"
@@ -98,7 +108,11 @@ export default function RegisterScreen() {
             value={password}
             onChangeText={setPassword}
             onBlur={() => setTouched((s) => ({ ...s, password: true }))}
-            error={touched.password ? fieldErrorMessage('newPassword', passwordError) : undefined}
+            error={
+              touched.password || password.length > 0
+                ? fieldErrorMessage('newPassword', passwordError)
+                : undefined
+            }
             onPrimary
             secure
             autoCapitalize="none"
@@ -122,7 +136,9 @@ export default function RegisterScreen() {
           onChangeText={setConfirmation}
           onBlur={() => setTouched((s) => ({ ...s, confirmation: true }))}
           error={
-            touched.confirmation ? fieldErrorMessage('confirmation', confirmationError) : undefined
+            touched.confirmation || confirmation.length > 0
+              ? fieldErrorMessage('confirmation', confirmationError)
+              : undefined
           }
           onPrimary
           secure

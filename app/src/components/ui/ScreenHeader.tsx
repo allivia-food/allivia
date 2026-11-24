@@ -6,15 +6,23 @@ import { strings } from '@/constants/strings';
 import { colors, sizes, spacing, typography } from '@/theme';
 
 import { IconButton } from './IconButton';
+import { HeaderLogo } from './HeaderLogo';
 
 export interface ScreenHeaderProps {
   title: string;
   onBack?: () => void;
   right?: ReactNode;
   tone?: 'default' | 'onImage';
+  showLogo?: boolean;
 }
 
-export function ScreenHeader({ title, onBack, right, tone = 'default' }: ScreenHeaderProps) {
+export function ScreenHeader({
+  title,
+  onBack,
+  right,
+  tone = 'default',
+  showLogo = true,
+}: ScreenHeaderProps) {
   const insets = useSafeAreaInsets();
   const titleColor = tone === 'onImage' ? colors.textOnPrimary : colors.secondary;
   return (
@@ -34,7 +42,11 @@ export function ScreenHeader({ title, onBack, right, tone = 'default' }: ScreenH
       >
         {title}
       </Text>
-      {right ? <View style={styles.right}>{right}</View> : null}
+      {right ? (
+        <View style={styles.right}>{right}</View>
+      ) : showLogo && tone === 'default' ? (
+        <HeaderLogo />
+      ) : null}
     </View>
   );
 }

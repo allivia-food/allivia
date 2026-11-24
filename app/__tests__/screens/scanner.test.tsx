@@ -1,11 +1,11 @@
-import { fireEvent, screen } from '@testing-library/react-native';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { renderWithClient } from '../../test-utils/renderWithClient';
 
 import type { Product } from '@/features/scanner/analyzeProduct';
 import type { Profile } from '@/services/profile';
 import { useProfileStore } from '@/store/profile';
 
-import ScannerScreen from '@/app/(tabs)/scanner';
+import ScannerScreen from '@/app/scanner-camera';
 import ScannerResultScreen from '@/app/scanner-result';
 
 let mockParams: Record<string, string> = {};
@@ -81,6 +81,7 @@ const product = (over: Partial<Product> = {}): Product => ({
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockGetProduct.mockReset();
   mockParams = {};
   mockPermission = { granted: true, canAskAgain: true };
   useProfileStore.getState().setProfile(profile);
@@ -92,12 +93,14 @@ describe('Scanner — câmera', () => {
     mockGetProduct.mockResolvedValue({ product: product(), fromCache: false });
     await renderWithClient(<ScannerScreen />);
     await fireEvent(screen.getByTestId('camera'), 'layout');
-    mockScan?.({ data: '7891000100104', type: 'ean13' });
+    await act(async () => mockScan?.({ data: '7891000100104', type: 'ean13' }));
     expect(mockGetProduct).not.toHaveBeenCalled();
     await screen.findByTestId('camera');
-    mockScan?.({ data: '7891000100103', type: 'ean13' });
-    mockScan?.({ data: '7891000100103', type: 'ean13' });
-    await screen.findByTestId('camera');
+    await act(async () => {
+      mockScan?.({ data: '7891000100103', type: 'ean13' });
+      mockScan?.({ data: '7891000100103', type: 'ean13' });
+    });
+    await waitFor(() => expect(mockRouter.push).toHaveBeenCalled());
     expect(mockGetProduct).toHaveBeenCalledTimes(1);
     expect(mockRouter.push).toHaveBeenCalledWith({
       pathname: '/scanner-result',
@@ -145,8 +148,7 @@ describe('Scanner — câmera', () => {
     ).toBeTruthy();
     mockGetProduct.mockResolvedValue({ product: product(), fromCache: false });
     await fireEvent.press(screen.getByTestId('scanner-retry'));
-    await screen.findByTestId('camera');
-    expect(mockRouter.push).toHaveBeenCalled();
+    await waitFor(() => expect(mockRouter.push).toHaveBeenCalled());
   });
 
   it('asks for the camera permission with an explanation', async () => {
