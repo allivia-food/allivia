@@ -1,0 +1,96 @@
+erDiagram
+    AUTH_USERS ||--|| PROFILES : "possui"
+    PROFILES ||--o{ SAVED_RECIPES : "salva"
+    RECIPES ||--o{ SAVED_RECIPES : "é salva em"
+    PROFILES ||--o{ SAVED_RESTAURANTS : "salva"
+    RESTAURANTS ||--o{ SAVED_RESTAURANTS : "é salvo em"
+    PROFILES ||--o{ SCANS : "realiza"
+    PRODUCTS_CACHE ||..o{ SCANS : "barcode"
+    ALLERGENS ||..o{ PROFILES : "valida allergies"
+    ALLERGENS ||..o{ RECIPES : "valida allergens"
+    ALLERGENS ||..o{ RESTAURANTS : "valida allergen_friendly"
+
+    AUTH_USERS {
+        uuid id PK
+        text email
+    }
+    PROFILES {
+        uuid id PK, FK
+        text email
+        text display_name
+        text_array allergies
+        text_array custom_allergies
+        text_array preferences
+        boolean onboarding_completed
+        smallint onboarding_step
+        boolean is_premium
+        jsonb subscription
+        text avatar_path
+        text terms_version
+        text privacy_version
+        timestamptz consent_accepted_at
+    }
+    ALLERGENS {
+        text id PK
+        text label
+        text_array synonyms
+        text icon
+    }
+    RECIPES {
+        uuid id PK
+        text title
+        text_array meal_types
+        integer ready_in_minutes
+        integer servings
+        text_array ingredients
+        text_array steps
+        text_array allergens
+        text_array diets
+        text image_url
+        boolean allergens_reviewed
+        boolean published
+        boolean featured
+    }
+    SAVED_RECIPES {
+        uuid user_id PK, FK
+        uuid recipe_id PK, FK
+        timestamptz saved_at
+    }
+    RESTAURANTS {
+        uuid id PK
+        text name
+        text address
+        float lat
+        float lng
+        text cuisine
+        text_array allergen_friendly
+        text_array diets
+        text allergen_source
+        boolean active
+    }
+    SAVED_RESTAURANTS {
+        uuid user_id PK, FK
+        uuid restaurant_id PK, FK
+        timestamptz saved_at
+    }
+    SCANS {
+        uuid id PK
+        uuid user_id FK
+        text barcode
+        text product_name
+        text verdict
+        text_array matched_allergens
+        timestamptz scanned_at
+    }
+    PRODUCTS_CACHE {
+        text barcode PK
+        text name
+        text brand
+        text_array ingredients
+        text_array allergens_declared
+        text_array traces_declared
+        text image_url
+        boolean not_found
+        text source
+        timestamptz fetched_at
+    }

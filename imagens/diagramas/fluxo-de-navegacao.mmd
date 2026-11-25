@@ -1,0 +1,11 @@
+flowchart LR
+    SP[Splash] -->|sem sessão| BV[Boas-vindas]
+    BV --> LG[Login]
+    BV --> CD[Cadastro]
+    CD --> VE[Verificação<br/>do e-mail]
+    VE --> ON
+    LG -->|onboarding incompleto| ON[Onboarding<br/>passos 1-3 e permissões]
+    LG -->|onboarding completo| AB[Abas]
+    ON --> AB
+    SP -.->|sessão e onboarding completo| AB
+    SP -.->|sessão e onboarding incompleto| ON

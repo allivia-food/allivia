@@ -1,0 +1,9 @@
+flowchart TB
+    T[Telas<br/>src/app] --> C[Componentes<br/>src/components]
+    T --> H[Hooks<br/>src/hooks]
+    T --> S[Stores Zustand<br/>src/store]
+    H --> R[Regras de negócio<br/>src/features]
+    H --> SV[Serviços<br/>src/services]
+    SV --> SB[(Supabase)]
+    SV --> OFF[Open Food Facts]
+    C --> TH[Tema e constantes<br/>src/theme · src/constants]

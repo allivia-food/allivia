@@ -1,0 +1,15 @@
+sequenceDiagram
+    actor U as Usuário
+    participant T as Tela (tabs)/recipes.tsx
+    participant H as Hook useRecipes
+    participant S as Serviço services/recipes.ts
+    participant DB as Supabase (search_recipes)
+    U->>T: abre a aba Receitas
+    T->>H: useRecipes(filtros)
+    H->>S: searchRecipes(filtros, página)
+    S->>DB: rpc search_recipes(...)
+    DB->>DB: lê o perfil de quem chamou e exclui receitas com seus alergênicos
+    DB-->>S: receitas compatíveis
+    S-->>H: converte snake_case em camelCase
+    H-->>T: dados em cache (TanStack Query)
+    T-->>U: lista de receitas

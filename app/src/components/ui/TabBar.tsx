@@ -30,7 +30,10 @@ export function TabBar({ active, onTabPress }: TabBarProps) {
         styles.bar,
         {
           paddingTop: Platform.OS === 'android' ? spacing.xs : spacing.md,
-          paddingBottom: Math.max(insets.bottom, Platform.OS === 'android' ? spacing.xs : spacing.sm),
+          paddingBottom: Math.max(
+            insets.bottom,
+            Platform.OS === 'android' ? spacing.xs : spacing.sm,
+          ),
           minHeight: sizes.tabBarHeight * (Platform.OS === 'android' ? 0.8 : 1) + insets.bottom,
           paddingLeft: insets.left + spacing.xs,
           paddingRight: insets.right + spacing.xs,

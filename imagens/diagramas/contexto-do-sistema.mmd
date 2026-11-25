@@ -1,0 +1,7 @@
+flowchart LR
+    U([Usuário]) --> APP[Aplicativo Allivia<br/>React Native + Expo]
+    APP -->|Auth, dados e fotos| SB[(Supabase<br/>Auth · PostgreSQL · Storage)]
+    APP -->|somente o código de barras| OFF[Open Food Facts<br/>API pública]
+    APP -->|imagens do mapa| OSM[OpenStreetMap<br/>tile.openstreetmap.org]
+    APP -->|link de rota| MAPS[App de mapas<br/>do aparelho]
+    APP -->|GPS e busca de endereço| DEV[Serviços de<br/>localização do aparelho]

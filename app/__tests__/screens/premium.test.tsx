@@ -137,16 +137,14 @@ describe('Pagamento (simulado)', () => {
   beforeEach(() => jest.useFakeTimers());
   afterEach(() => jest.useRealTimers());
 
-  it('summary follows the plan; demo notice and footer replace "dados seguros"', async () => {
+  it('summary follows the plan; demo notices replace "dados seguros"', async () => {
     mockParams = { plan: 'monthly' };
     await renderWithClient(<CheckoutScreen />);
     expect(screen.getByText('Plano Mensal - Scanner Allivia')).toBeTruthy();
     expect(screen.getByText('R$14,90/mês')).toBeTruthy();
     expect(screen.getByText('Renova automaticamente todo mês.')).toBeTruthy();
     expect(screen.getByTestId('demo-notice')).toBeTruthy();
-    expect(
-      screen.getByText('Ambiente de demonstração. Não digite dados de cartão reais.'),
-    ).toBeTruthy();
+    expect(screen.getByText('Ambiente de demonstração: a confirmação será simulada.')).toBeTruthy();
     expect(screen.queryByText('Seus dados estão seguros conosco.')).toBeNull();
   });
 

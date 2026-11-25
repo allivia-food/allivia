@@ -25,7 +25,9 @@ export function Chip({
 }: ChipProps) {
   const palette = paletteFor(variant, active, tone);
   const content = (
-    <Text style={[typography.chip, { color: palette.text, fontSize: typography.chip.fontSize * scale }]}>
+    <Text
+      style={[typography.chip, { color: palette.text, fontSize: typography.chip.fontSize * scale }]}
+    >
       {label}
     </Text>
   );
