@@ -1,8 +1,36 @@
-.env
-.env*.local
-
+# Dependências
 node_modules/
-.expo/
 
+# Expo e builds
+.expo/
+dist/
+web-build/
+.cache/
+/ios
+/android
+*.tsbuildinfo
+
+# Variáveis de ambiente e credenciais (nunca versionar)
+.env
+.env.*
+!.env.example
+*.jks
+*.keystore
+*.p8
+*.p12
+*.key
+*.pem
+*.mobileprovision
+
+# Logs
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# Sistema operacional
 .DS_Store
 Thumbs.db
+desktop.ini
+
+# Arquivos temporários do Office
+~$*
