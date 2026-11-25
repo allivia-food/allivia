@@ -106,11 +106,6 @@ export default function CheckoutScreen() {
           <Text style={typography.bodySmall}>{t.simulatedOnly}</Text>
           {error ? <Banner variant="error" title={error} testID="payment-error" /> : null}
 
-          <View style={styles.footer}>
-            <Icon name="lock" size={sizes.iconButton} />
-            <Text style={[typography.footnote, styles.flexShrink]}>{t.footer}</Text>
-          </View>
-
           <Button
             label={t.confirm}
             variant="accent"
@@ -129,7 +124,6 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   pattern: { opacity: opacity.backgroundPatternLight },
   flex: { flex: 1 },
-  flexShrink: { flexShrink: 1 },
   content: {
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.lg,
@@ -147,10 +141,4 @@ const styles = StyleSheet.create({
     ...shadows.card,
   },
   methods: { gap: spacing.sm },
-  footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-  },
 });

@@ -1,10 +1,10 @@
 import * as Linking from 'expo-linking';
-import { StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { TextScreen } from '@/components/feature/TextScreen';
 import { HELP_EMERGENCY, HELP_HEALTH_NOTE, HELP_TEXT, HELP_TITLE } from '@/constants/legal';
 import { strings } from '@/constants/strings';
-import { colors, typography } from '@/theme';
+import { colors, spacing, typography } from '@/theme';
 
 const t = strings.help;
 
@@ -26,15 +26,21 @@ export default function HelpScreen() {
       </Text>
       <Text style={typography.subtitle}>{HELP_HEALTH_NOTE}</Text>
       <Text style={[typography.subtitle, styles.emergency]}>{HELP_EMERGENCY}</Text>
-      <Text style={typography.sectionTitle} accessibilityRole="header">
-        {t.teamTitle}
-      </Text>
-      <Text style={typography.subtitle}>{t.teamInstitution}</Text>
-      {t.teamMembers.map((name) => (
-        <Text key={name} style={typography.subtitle}>
-          {name}
-        </Text>
-      ))}
+      <View style={styles.team}>
+        <View style={styles.teamHeading}>
+          <Text style={styles.teamTitle} accessibilityRole="header">
+            {t.teamTitle}
+          </Text>
+          <Text style={styles.institution}>{t.teamInstitution}</Text>
+        </View>
+        <View style={styles.members}>
+          {t.teamMembers.map((name) => (
+            <Text key={name} style={typography.subtitle}>
+              • {name}
+            </Text>
+          ))}
+        </View>
+      </View>
     </TextScreen>
   );
 }
@@ -42,4 +48,9 @@ export default function HelpScreen() {
 const styles = StyleSheet.create({
   email: { ...typography.link, color: colors.primary },
   emergency: { color: colors.error },
+  team: { marginTop: spacing.lg, gap: spacing.lg },
+  teamHeading: { gap: spacing.xs },
+  teamTitle: { ...typography.headerTitle, fontSize: 20 },
+  institution: { ...typography.bodySmall, color: colors.textSecondary },
+  members: { gap: spacing.sm },
 });

@@ -19,7 +19,7 @@ export const typography = {
   bodySmall: { fontFamily: fontFamily.semiBold, fontSize: 13, color: colors.textPrimary },
   caption: { fontFamily: fontFamily.medium, fontSize: 12, color: colors.textPrimary },
   input: { fontFamily: fontFamily.semiBold, fontSize: 17, color: colors.textPrimary },
-  buttonLarge: { fontFamily: fontFamily.bold, fontSize: 20, color: colors.textOnPrimary },
+  buttonLarge: { fontFamily: fontFamily.bold, fontSize: 16, color: colors.textOnPrimary },
   buttonSmall: { fontFamily: fontFamily.extraBold, fontSize: 13, color: colors.textOnPrimary },
   chip: { fontFamily: fontFamily.extraBold, fontSize: 13 },
   link: {

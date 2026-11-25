@@ -11,6 +11,7 @@ export interface ChipProps {
   tone?: 'green' | 'orange';
   onPress?: () => void;
   testID?: string;
+  scale?: number;
 }
 
 export function Chip({
@@ -20,9 +21,14 @@ export function Chip({
   tone = 'green',
   onPress,
   testID,
+  scale = 1,
 }: ChipProps) {
   const palette = paletteFor(variant, active, tone);
-  const content = <Text style={[typography.chip, { color: palette.text }]}>{label}</Text>;
+  const content = (
+    <Text style={[typography.chip, { color: palette.text, fontSize: typography.chip.fontSize * scale }]}>
+      {label}
+    </Text>
+  );
 
   if (variant !== 'filter') {
     return (
@@ -42,6 +48,11 @@ export function Chip({
       testID={testID}
       style={({ pressed }) => [
         styles.base,
+        {
+          minHeight: sizes.chipHeight * scale,
+          paddingHorizontal: spacing.md * scale,
+          paddingVertical: spacing.xs * scale,
+        },
         { backgroundColor: palette.background },
         pressed && styles.pressed,
       ]}

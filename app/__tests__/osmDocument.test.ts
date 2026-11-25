@@ -20,6 +20,20 @@ it('runs the actual bundled Leaflet document and bridges restaurant marker click
   });
   try {
     expect(messages).toContainEqual({ type: 'ready' });
+    const fitBounds = jest.spyOn(dom.window.L.Map.prototype, 'fitBounds');
+    const initialState = {
+      origin: { lat: -23.6, lng: -46.7 },
+      selectedId: null,
+      points: [{ id: 'distant', name: 'Restaurante distante', lat: -22.9, lng: -43.2 }],
+    };
+    dom.window.eval(mapUpdateScript(initialState));
+    expect(fitBounds).toHaveBeenCalledTimes(1);
+    const bounds = fitBounds.mock.calls[0][0] as { contains(point: number[]): boolean };
+    expect(bounds.contains([-22.9, -43.2])).toBe(true);
+    // Repeated updates must preserve the user's current pan and zoom.
+    dom.window.eval(mapUpdateScript(initialState));
+    expect(fitBounds).toHaveBeenCalledTimes(1);
+    fitBounds.mockRestore();
     const name = '<img src=x onerror=alert(1)> Restaurante';
     dom.window.eval(
       mapUpdateScript({

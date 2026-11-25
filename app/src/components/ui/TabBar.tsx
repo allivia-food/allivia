@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { IconName } from '@/constants/icons';
@@ -29,8 +29,9 @@ export function TabBar({ active, onTabPress }: TabBarProps) {
       style={[
         styles.bar,
         {
-          paddingBottom: insets.bottom + spacing.md,
-          minHeight: sizes.tabBarHeight + insets.bottom,
+          paddingTop: Platform.OS === 'android' ? spacing.xs : spacing.md,
+          paddingBottom: Math.max(insets.bottom, Platform.OS === 'android' ? spacing.xs : spacing.sm),
+          minHeight: sizes.tabBarHeight * (Platform.OS === 'android' ? 0.8 : 1) + insets.bottom,
           paddingLeft: insets.left + spacing.xs,
           paddingRight: insets.right + spacing.xs,
         },

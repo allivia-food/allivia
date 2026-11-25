@@ -1,6 +1,6 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CategoryFilter } from '@/components/restaurants/CategoryFilter';
@@ -137,6 +137,7 @@ export default function RestaurantsScreen() {
               key={p.id}
               label={p.label}
               variant="filter"
+              scale={Platform.OS === 'android' ? 0.805 : 1}
               active={diets.includes(p.id)}
               onPress={() =>
                 setDietOverride({

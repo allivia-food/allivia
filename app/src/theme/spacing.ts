@@ -20,7 +20,7 @@ export const sizes = {
   buttonSmallHeight: 38,
   inputHeight: 56,
   chipHeight: 29,
-  tabBarHeight: 92,
+  tabBarHeight: 68,
   icon: 22,
   iconSmall: 15,
   iconInput: 23,

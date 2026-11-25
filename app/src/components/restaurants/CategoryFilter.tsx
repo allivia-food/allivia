@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Icon } from '@/components/ui';
 import type { IconName } from '@/constants/icons';
@@ -21,6 +21,7 @@ export interface CategoryFilterProps {
 }
 
 export function CategoryFilter({ value, onChange }: CategoryFilterProps) {
+  const scale = Platform.OS === 'android' ? 0.6 : 1;
   return (
     <View style={styles.row} accessibilityRole="radiogroup">
       {OPTIONS.map((o) => {
@@ -37,15 +38,21 @@ export function CategoryFilter({ value, onChange }: CategoryFilterProps) {
             testID={`category-${o.id}`}
             style={({ pressed }) => [styles.item, pressed && styles.pressed]}
           >
-            <View style={[styles.circle, selected && styles.circleOn]}>
+            <View
+              style={[
+                styles.circle,
+                { width: r.categoryCircle * scale, height: r.categoryCircle * scale },
+                selected && styles.circleOn,
+              ]}
+            >
               <Icon
                 name={o.icon}
-                size={r.categoryIcon}
+                size={r.categoryIcon * scale}
                 color={selected ? colors.textOnPrimary : colors.textSecondary}
               />
             </View>
             <Text style={[typography.categoryLabel, styles.label]} maxFontSizeMultiplier={1.2}>
-              {label}
+              {o.id === 'vegetarian' ? 'Veg.' : label}
             </Text>
           </Pressable>
         );

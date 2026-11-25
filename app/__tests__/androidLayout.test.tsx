@@ -12,15 +12,15 @@ beforeEach(() => {
 afterEach(() => jest.restoreAllMocks());
 
 it.each([0, 24, 48])(
-  'reserves navigation inset %i plus breathing room below the tabs',
+  'reserves navigation inset %i with a minimum gap below the tabs',
   async (bottom) => {
     jest
       .spyOn(SafeArea, 'useSafeAreaInsets')
       .mockReturnValue({ top: 24, bottom, left: 0, right: 0 });
     await render(<TabBar active="home" onTabPress={jest.fn()} />);
     const style = StyleSheet.flatten(screen.getByTestId('app-tab-bar').props.style);
-    expect(style.paddingBottom).toBe(bottom + spacing.md);
-    expect(style.minHeight).toBe(sizes.tabBarHeight + bottom);
+    expect(style.paddingBottom).toBe(Math.max(bottom, spacing.xs));
+    expect(style.minHeight).toBe(sizes.tabBarHeight * 0.8 + bottom);
     expect(screen.getAllByRole('tab')).toHaveLength(5);
   },
 );

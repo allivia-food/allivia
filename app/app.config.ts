@@ -6,7 +6,6 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     android: {
       ...config.android,
       package: process.env.ANDROID_APP_ID || config.android?.package || 'com.allivia.app',
-      versionCode: config.android?.versionCode ?? 1,
       softwareKeyboardLayoutMode: 'resize',
     },
     plugins: [

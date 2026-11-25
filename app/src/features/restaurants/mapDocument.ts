@@ -17,7 +17,7 @@ export interface MapState {
 export const mapScript = String.raw`
 (function () {
   var map = L.map('map', { attributionControl: false });
-  var user, lastOrigin, lastSelected, layer = L.layerGroup().addTo(map);
+  var user, lastOrigin, lastSelected, lastPoints, layer = L.layerGroup().addTo(map);
   var tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19, minZoom: 3, updateWhenIdle: true, keepBuffer: 0,
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'
@@ -31,6 +31,7 @@ export const mapScript = String.raw`
   tiles.on('tileload', function () { send({ type: 'tile-loaded' }); });
   window.updateAlliviaMap = function (state) {
     var originKey = state.origin.lat + ',' + state.origin.lng;
+    var originChanged = lastOrigin !== originKey;
     if (lastOrigin !== originKey) {
       lastOrigin = originKey;
       map.setView([state.origin.lat, state.origin.lng], 13);
@@ -59,6 +60,12 @@ export const mapScript = String.raw`
       marker.fire('add');
     });
     var point = state.points.find(function (item) { return item.id === state.selectedId; });
+    var pointsKey = JSON.stringify(state.points.map(function (item) { return [item.id, item.lat, item.lng]; }));
+    map.invalidateSize();
+    if (!point && state.points.length && (originChanged || pointsKey !== lastPoints)) {
+      map.fitBounds(L.latLngBounds(state.points.map(function (item) { return [item.lat, item.lng]; })), { padding: [24, 24], maxZoom: 15, animate: false });
+    }
+    lastPoints = pointsKey;
     var selectionKey = point ? point.id + ':' + point.lat + ':' + point.lng : null;
     if (selectionKey && selectionKey !== lastSelected) {
       map.stop();

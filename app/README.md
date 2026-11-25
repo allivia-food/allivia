@@ -67,6 +67,8 @@ Os perfis em `eas.json` geram APK instalável (`preview`) e AAB para Google Play
 
 Configure `EXPO_PUBLIC_SUPABASE_URL` e `EXPO_PUBLIC_SUPABASE_ANON_KEY` nos ambientes `preview` e `production` do projeto Expo. O `.env` local não é enviado pelo Git. O mapa usa OpenStreetMap com Leaflet e não precisa de chave do Google, cadastro de faturamento ou SHA-1 para autorizar o mapa.
 
+O `.easignore` fica na raiz do repositório (`../.easignore` em relação a esta pasta). O EAS não lê esse arquivo dentro de `app/`. Ele exclui dependências locais, caches, testes, SQLs e documentação do envio, preservando o código, os recursos e as configurações necessários à build.
+
 Depois de configurar as variáveis e conectar a conta/projeto Expo:
 
 ```powershell
