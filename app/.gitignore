@@ -8,6 +8,7 @@ expo-env.d.ts
 .kotlin/
 *.orig.*
 *.jks
+*.keystore
 *.p8
 *.p12
 *.key
@@ -23,7 +24,8 @@ yarn-error.*
 *.pem
 
 .env
-.env*.local
+.env.*
+!.env.example
 
 *.tsbuildinfo
 
@@ -31,3 +33,6 @@ yarn-error.*
 /android
 
 .cache/
+
+supabase/.temp/
+supabase/.branches/

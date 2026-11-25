@@ -3,7 +3,8 @@ import type { Session, User } from '@supabase/supabase-js';
 import { PRIVACY_VERSION, TERMS_VERSION } from '@/constants/legal';
 import { isValidPassword, normalizeEmail } from '@/utils/validators';
 import { EmailOtpError, isEmailOtp, markOtpSent, otpKey } from '@/features/auth/emailOtp';
-import { withTimeout } from '@/utils/withTimeout';
+import { TimeoutError, withTimeout } from '@/utils/withTimeout';
+import { authErrorKind } from '@/features/auth/authErrors';
 
 import { createPasswordAuthClient, getSupabase } from './supabase';
 
@@ -81,7 +82,12 @@ export async function ensureProfile(user: User): Promise<boolean> {
 }
 
 export async function reauthenticate(currentEmail: string, password: string): Promise<void> {
-  await login(currentEmail, password);
+  try {
+    await login(currentEmail, password);
+  } catch (error) {
+    if (authErrorKind(error) === 'network') throw new EmailOtpError('password_check_connection');
+    throw error;
+  }
 }
 
 export async function changeEmail(newEmail: string): Promise<void> {
@@ -178,7 +184,14 @@ export async function completePasswordRecovery(newPassword: string): Promise<voi
 }
 
 export async function requestPasswordChangeCode(): Promise<string> {
-  const { data, error } = await withTimeout(getSupabase().auth.getUser());
+  const { data, error } = await withTimeout(getSupabase().auth.getUser()).catch(
+    (error: unknown) => {
+      if (authErrorKind(error) === 'network') throw new EmailOtpError('account_check_connection');
+      throw error;
+    },
+  );
+  if (error && authErrorKind(error) === 'network')
+    throw new EmailOtpError('account_check_connection');
   if (error) throw error;
   if (!data.user?.email || !data.user.email_confirmed_at)
     throw new EmailOtpError('account_changed');
@@ -192,7 +205,14 @@ export async function requestPasswordChangeCode(): Promise<string> {
   passwordProof = proof;
   const { error: sendError } = await withTimeout(
     proof.client.auth.signInWithOtp({ email: proof.email, options: { shouldCreateUser: false } }),
-  );
+    45000,
+  ).catch((error: unknown) => {
+    if (error instanceof TimeoutError) throw new EmailOtpError('email_send_timeout');
+    if (authErrorKind(error) === 'network') throw new EmailOtpError('email_send_connection');
+    throw error;
+  });
+  if (sendError && authErrorKind(sendError) === 'network')
+    throw new EmailOtpError('email_send_connection');
   if (sendError) throw sendError;
   if (passwordProof !== proof) throw new EmailOtpError('proof_expired');
   markOtpSent(otpKey('change', proof.email));

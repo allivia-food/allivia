@@ -2,6 +2,8 @@ import type { AllergenId } from '@/constants/allergens';
 import type { PreferenceId } from '@/constants/preferences';
 import type { Subscription } from '@/features/premium/plans';
 import { withTimeout } from '@/utils/withTimeout';
+import { normalizeDisplayName, validateDisplayName } from '@/utils/validators';
+import { validateCustomAllergy } from '@/features/onboarding/selection';
 
 import { getSupabase } from './supabase';
 
@@ -70,6 +72,18 @@ export async function getProfile(userId: string): Promise<Profile | null> {
 }
 
 async function update(userId: string, values: Partial<ProfileRow>): Promise<Profile> {
+  if (values.display_name !== undefined) {
+    if (validateDisplayName(values.display_name)) throw new Error('Invalid display name');
+    values.display_name = normalizeDisplayName(values.display_name);
+  }
+  if (values.custom_allergies !== undefined) {
+    const checked: string[] = [];
+    for (const allergy of values.custom_allergies) {
+      if (validateCustomAllergy(allergy, checked)) throw new Error('Invalid custom allergy');
+      checked.push(normalizeDisplayName(allergy));
+    }
+    values.custom_allergies = checked;
+  }
   const { data, error } = await withTimeout(
     getSupabase()
       .from('profiles')

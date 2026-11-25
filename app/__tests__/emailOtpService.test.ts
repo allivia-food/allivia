@@ -8,6 +8,7 @@ import {
   resendSignupCode,
   verifyRecoveryCode,
 } from '@/services/auth';
+import { emailOtpErrorMessage } from '@/features/auth/emailOtp';
 
 const mockMainVerify = jest.fn();
 const mockMainUpdate = jest.fn();
@@ -127,6 +128,39 @@ it('sends profile verification only to the authenticated address without creatin
     current_password: 'Atual1234',
   });
   expect(mockProofUpdate).not.toHaveBeenCalled();
+});
+
+it('identifies account lookup failures before requesting an email', async () => {
+  mockGetUser.mockRejectedValueOnce(new TypeError('Network request failed'));
+  await expect(requestPasswordChangeCode()).rejects.toMatchObject({
+    code: 'account_check_connection',
+  });
+  expect(mockProofSend).not.toHaveBeenCalled();
+});
+
+it('identifies email request failures without changing the password', async () => {
+  mockProofSend.mockRejectedValueOnce(new TypeError('Network request failed'));
+  await expect(requestPasswordChangeCode()).rejects.toMatchObject({
+    code: 'email_send_connection',
+  });
+  expect(mockMainUpdate).not.toHaveBeenCalled();
+});
+
+it('allows a slower email request and explains a timeout without blaming the internet', async () => {
+  jest.useFakeTimers();
+  try {
+    mockProofSend.mockImplementationOnce(() => new Promise(() => {}));
+    const result = requestPasswordChangeCode();
+    const rejection = expect(result).rejects.toMatchObject({ code: 'email_send_timeout' });
+    await jest.advanceTimersByTimeAsync(15001);
+    expect(mockProofSend).toHaveBeenCalled();
+    await jest.advanceTimersByTimeAsync(30000);
+    await rejection;
+    expect(emailOtpErrorMessage({ code: 'email_send_timeout' })).toContain('Confira seu e-mail');
+    expect(mockMainUpdate).not.toHaveBeenCalled();
+  } finally {
+    jest.useRealTimers();
+  }
 });
 
 it('rejects incorrect codes on the profile even for recently authenticated users', async () => {

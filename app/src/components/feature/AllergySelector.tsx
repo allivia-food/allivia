@@ -119,6 +119,7 @@ export function AllergySelector({ allergies, customAllergies, onChange }: Allerg
         <Input
           placeholder={t.addAllergyPlaceholder}
           value={draft}
+          inputKind="food"
           onChangeText={setDraft}
           onBlur={() => setDraftTouched(true)}
           error={

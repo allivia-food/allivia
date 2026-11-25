@@ -68,6 +68,7 @@ export default function OnboardingNameScreen() {
         icon="user"
         placeholder={t.namePlaceholder}
         value={name}
+        inputKind="name"
         onChangeText={setName}
         onBlur={() => {
           setName((v) => normalizeDisplayName(v));

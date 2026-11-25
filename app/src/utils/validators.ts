@@ -10,7 +10,9 @@ export function normalizeEmail(value: string): string {
 
 export function isValidEmail(value: string): boolean {
   const email = normalizeEmail(value);
-  return email.length <= EMAIL_MAX_LENGTH && EMAIL_PATTERN.test(email);
+  return (
+    email.length <= EMAIL_MAX_LENGTH && !/[\p{Cc}\p{Cf}]/u.test(email) && EMAIL_PATTERN.test(email)
+  );
 }
 
 export interface PasswordRules {
@@ -27,7 +29,7 @@ export function checkPasswordRules(password: string): PasswordRules {
 
 export function isValidPassword(password: string): boolean {
   const rules = checkPasswordRules(password);
-  return rules.minLength && rules.letterAndNumber;
+  return rules.minLength && rules.letterAndNumber && password.length <= PASSWORD_MAX_LENGTH;
 }
 
 export function passwordsMatch(password: string, confirmation: string): boolean {
@@ -61,7 +63,7 @@ export const CUSTOM_ALLERGY_MIN = 2;
 export const CUSTOM_ALLERGY_MAX = 40;
 
 export function normalizeDisplayName(value: string): string {
-  return value.trim().replace(/\s+/g, ' ');
+  return value.normalize('NFC').trim().replace(/\s+/g, ' ');
 }
 
 export type DisplayNameError = 'required' | 'tooShort' | 'tooLong' | 'invalidChars';
@@ -71,7 +73,7 @@ export function validateDisplayName(value: string): DisplayNameError | null {
   if (name === '') return 'required';
   if (name.length < DISPLAY_NAME_MIN) return 'tooShort';
   if (name.length > DISPLAY_NAME_MAX) return 'tooLong';
-  return /^[\p{L}\p{M}' -]+$/u.test(name) ? null : 'invalidChars';
+  return /\p{L}/u.test(name) && /^[\p{L}\p{M}'’ -]+$/u.test(name) ? null : 'invalidChars';
 }
 
 export function normalizeForCompare(value: string): string {

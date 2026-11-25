@@ -320,11 +320,12 @@ function ManualEntry({
         placeholder={t.manualPlaceholder}
         value={value}
         onChangeText={(v) => {
-          setValue(v.replace(/[^\d ]/g, ''));
+          setValue(v);
           setError(null);
         }}
         keyboardType="number-pad"
-        maxLength={18}
+        inputKind="digits"
+        maxLength={14}
         error={error ?? undefined}
         returnKeyType="done"
         onSubmitEditing={confirm}

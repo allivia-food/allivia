@@ -77,6 +77,7 @@ export function EmailCodeForm({
           setError(null);
         }}
         maxLength={6}
+        inputKind="digits"
         inputMode="numeric"
         keyboardType="number-pad"
         autoComplete="one-time-code"

@@ -76,7 +76,7 @@ export function PremiumPlan() {
               accessibilityLabel={`${t.plans[id].name}, ${t.plans[id].price}`}
               testID={`plan-${id}`}
             >
-              <View>
+              <View style={styles.flex}>
                 <Text style={typography.sectionTitle}>{t.plans[id].name}</Text>
                 <Text style={typography.bodySmall}>{t.plans[id].price}</Text>
               </View>

@@ -55,9 +55,11 @@ export default function VerifyEmailScreen() {
           onConfirm={async (code) => {
             if (kind === 'signup') {
               await confirmSignupCode(email, code);
+              setBusy(false);
               disablePrevention();
             } else {
               await verifyRecoveryCode(email, code);
+              setBusy(false);
               disablePrevention();
               router.replace('/reset-password');
             }

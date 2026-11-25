@@ -11,6 +11,8 @@ export type AuthErrorKind =
   | 'rateLimited'
   | 'banned'
   | 'network'
+  | 'emailDelivery'
+  | 'server'
   | 'unknown';
 
 const KIND_BY_CODE: Record<string, AuthErrorKind> = {
@@ -25,6 +27,15 @@ const KIND_BY_CODE: Record<string, AuthErrorKind> = {
 };
 
 export function authErrorKind(error: unknown): AuthErrorKind {
+  if (isAuthError(error)) {
+    if (
+      /error sending (?:confirmation|recovery|magic link|email|reset password|reauthentication)/i.test(
+        error.message,
+      )
+    )
+      return 'emailDelivery';
+    if (error.status && error.status >= 500) return 'server';
+  }
   if (error instanceof TimeoutError || isAuthRetryableFetchError(error)) return 'network';
   if (isAuthError(error) && error.code && KIND_BY_CODE[error.code]) return KIND_BY_CODE[error.code];
   if (error instanceof TypeError && /network|fetch/i.test(error.message)) return 'network';
@@ -41,6 +52,9 @@ const MESSAGE_BY_KIND: Record<AuthErrorKind, string> = {
   rateLimited: t.rateLimited,
   banned: t.banned,
   network: strings.common.networkError,
+  emailDelivery:
+    'Não foi possível enviar o e-mail de verificação. Tente novamente mais tarde ou entre em contato com o suporte.',
+  server: 'O serviço de autenticação está indisponível no momento. Tente novamente em instantes.',
   unknown: strings.common.unknownError,
 };
 

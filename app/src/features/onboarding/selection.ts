@@ -1,5 +1,6 @@
 import { ALLERGENS, type AllergenId } from '@/constants/allergens';
 import type { PreferenceId } from '@/constants/preferences';
+import { isValidFoodTerm } from '@/utils/textInput';
 import {
   CUSTOM_ALLERGY_MAX,
   CUSTOM_ALLERGY_MIN,
@@ -9,7 +10,7 @@ import {
 
 export const MAX_CUSTOM_ALLERGIES = 5;
 
-export type CustomAllergyError = 'tooShort' | 'tooLong' | 'duplicate' | 'limit';
+export type CustomAllergyError = 'tooShort' | 'tooLong' | 'duplicate' | 'limit' | 'invalidChars';
 
 export function validateCustomAllergy(
   value: string,
@@ -19,6 +20,7 @@ export function validateCustomAllergy(
   if (existingCustom.length >= MAX_CUSTOM_ALLERGIES) return 'limit';
   if (name.length < CUSTOM_ALLERGY_MIN) return 'tooShort';
   if (name.length > CUSTOM_ALLERGY_MAX) return 'tooLong';
+  if (!isValidFoodTerm(name)) return 'invalidChars';
   const key = normalizeForCompare(name);
   const taken = [...ALLERGENS.map((a) => a.label), ...existingCustom].map(normalizeForCompare);
   return taken.includes(key) ? 'duplicate' : null;

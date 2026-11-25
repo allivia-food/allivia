@@ -1,5 +1,6 @@
 import type { PreferenceId } from '@/constants/preferences';
 import { normalizeForCompare } from '@/utils/validators';
+import { isValidFoodTerm } from '@/utils/textInput';
 
 export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack' | 'dessert';
 export type TimeRange = 'upTo15' | 'from15to30' | 'over30';
@@ -103,7 +104,7 @@ export function toggleDiet(diets: readonly PreferenceId[], id: PreferenceId): Pr
   return [...next, id];
 }
 
-export type IngredientError = 'tooShort' | 'tooLong' | 'duplicate' | 'limit';
+export type IngredientError = 'tooShort' | 'tooLong' | 'duplicate' | 'limit' | 'invalidChars';
 
 export function validateIngredient(
   value: string,
@@ -113,6 +114,7 @@ export function validateIngredient(
   if (existing.length >= MAX_INGREDIENT_FILTERS) return 'limit';
   if (term.length < INGREDIENT_MIN) return 'tooShort';
   if (term.length > INGREDIENT_MAX) return 'tooLong';
+  if (!isValidFoodTerm(term)) return 'invalidChars';
   const key = normalizeForCompare(term);
   return existing.some((e) => normalizeForCompare(e) === key) ? 'duplicate' : null;
 }

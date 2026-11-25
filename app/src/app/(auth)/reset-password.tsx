@@ -31,6 +31,7 @@ export default function ResetPasswordScreen() {
       setPassword('');
       setConfirmation('');
       setSuccess(true);
+      setBusy(false);
       disablePrevention();
     } catch (failure) {
       setError(emailOtpErrorMessage(failure) || authErrorMessage(failure));

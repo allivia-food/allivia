@@ -11,7 +11,7 @@ export interface Subscription {
   priceCents: number;
 }
 
-export const PLAN_PRICE_CENTS: Record<PlanId, number> = { annual: 4990, monthly: 990 };
+export const PLAN_PRICE_CENTS: Record<PlanId, number> = { annual: 14990, monthly: 1490 };
 export const DEFAULT_PLAN: PlanId = 'annual';
 
 export const isPlanId = (value: unknown): value is PlanId =>

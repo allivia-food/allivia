@@ -141,7 +141,7 @@ describe('Pagamento (simulado)', () => {
     mockParams = { plan: 'monthly' };
     await renderWithClient(<CheckoutScreen />);
     expect(screen.getByText('Plano Mensal - Scanner Allivia')).toBeTruthy();
-    expect(screen.getByText('R$9,90/mês')).toBeTruthy();
+    expect(screen.getByText('R$14,90/mês')).toBeTruthy();
     expect(screen.getByText('Renova automaticamente todo mês.')).toBeTruthy();
     expect(screen.getByTestId('demo-notice')).toBeTruthy();
     expect(
@@ -170,7 +170,7 @@ describe('Pagamento (simulado)', () => {
       plan: 'annual',
       status: 'active',
       simulated: true,
-      priceCents: 4990,
+      priceCents: 14990,
     });
     const sent = JSON.stringify(values);
     for (const secret of ['4111', '1111 1111', '12/28', '987']) expect(sent).not.toContain(secret);

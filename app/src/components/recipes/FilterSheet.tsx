@@ -18,6 +18,7 @@ import type { PreferenceId } from '@/constants/preferences';
 import { strings } from '@/constants/strings';
 import {
   defaultFilters,
+  INGREDIENT_MAX,
   DIET_FILTERS,
   MEAL_TYPES,
   TIME_RANGES,
@@ -26,6 +27,7 @@ import {
   type RecipeFilters,
 } from '@/features/recipes/filters';
 import { colors, layout, radius, shadows, sizes, spacing, typography } from '@/theme';
+import { sanitizeTextInput } from '@/utils/textInput';
 
 export interface FilterSheetProps {
   filters: RecipeFilters;
@@ -223,13 +225,13 @@ function IngredientField({ label, icon, values, onChange, testID }: IngredientFi
         </Pressable>
         <TextInput
           value={text}
-          onChangeText={setText}
+          onChangeText={(value) => setText(sanitizeTextInput(value, 'food', INGREDIENT_MAX))}
           placeholder={label}
           placeholderTextColor={colors.textPlaceholder}
           style={styles.input}
           returnKeyType="done"
           onSubmitEditing={add}
-          maxLength={40}
+          maxLength={INGREDIENT_MAX}
           maxFontSizeMultiplier={Platform.OS === 'android' ? 1.3 : undefined}
           accessibilityLabel={label}
           testID={`${testID}-input`}

@@ -8,18 +8,18 @@ import {
 const now = new Date('2026-10-01T12:00:00Z');
 
 describe('simulated subscription', () => {
-  it('annual: 49,90 for 1 year; monthly: 9,90 for 1 month', () => {
+  it('annual: 149,90 for 1 year; monthly: 14,90 for 1 month', () => {
     expect(newSubscription('annual', now)).toEqual({
       plan: 'annual',
       status: 'active',
       simulated: true,
       startedAt: '2026-10-01T12:00:00.000Z',
       renewsAt: '2027-10-01T12:00:00.000Z',
-      priceCents: 4990,
+      priceCents: 14990,
     });
     expect(newSubscription('monthly', now)).toMatchObject({
       renewsAt: '2026-11-01T12:00:00.000Z',
-      priceCents: 990,
+      priceCents: 1490,
     });
   });
 

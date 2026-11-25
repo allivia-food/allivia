@@ -71,7 +71,14 @@ function Editor({ profile }: { profile: import('@/services/profile').Profile }) 
     if (saving || verifying) return;
     Alert.alert('Descartar alterações?', 'Você tem alterações não salvas.', [
       { text: 'Continuar editando', style: 'cancel' },
-      { text: 'Descartar', style: 'destructive', onPress: repeat },
+      {
+        text: 'Descartar',
+        style: 'destructive',
+        onPress: () => {
+          setAllowLeave(true);
+          repeat();
+        },
+      },
     ]);
   });
   async function pick(camera: boolean) {
@@ -181,7 +188,8 @@ function Editor({ profile }: { profile: import('@/services/profile').Profile }) 
           disabled={saving || verificationEmail !== null}
           placeholder={t.name}
           value={name}
-          onChangeText={(text) => setName(text.replace(/\p{N}/gu, ''))}
+          inputKind="name"
+          onChangeText={setName}
           error={nameError ? strings.nameErrors[nameError] : undefined}
           autoCapitalize="words"
           maxLength={DISPLAY_NAME_MAX}

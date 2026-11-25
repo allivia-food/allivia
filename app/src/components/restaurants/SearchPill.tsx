@@ -2,19 +2,26 @@ import { Platform, StyleSheet, TextInput, View, type TextInputProps } from 'reac
 
 import { Icon } from '@/components/ui';
 import { colors, layout, radius, shadows, sizes, spacing, typography } from '@/theme';
+import { sanitizeTextInput, SEARCH_MAX_LENGTH } from '@/utils/textInput';
 
 export interface SearchPillProps extends Omit<TextInputProps, 'style'> {
   placeholder: string;
 }
 
-export function SearchPill({ placeholder, ...rest }: SearchPillProps) {
+export function SearchPill({
+  placeholder,
+  onChangeText,
+  maxLength = SEARCH_MAX_LENGTH,
+  ...rest
+}: SearchPillProps) {
   return (
     <View style={styles.pill}>
       <Icon name="search" size={sizes.icon} color={colors.textSecondary} />
       <TextInput
-        maxLength={200}
+        maxLength={maxLength}
         maxFontSizeMultiplier={Platform.OS === 'android' ? 1.3 : undefined}
         {...rest}
+        onChangeText={(value) => onChangeText?.(sanitizeTextInput(value, 'text', maxLength))}
         placeholder={placeholder}
         accessibilityLabel={placeholder}
         placeholderTextColor={colors.textSecondary}

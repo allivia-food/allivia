@@ -30,14 +30,14 @@ App mobile (Expo + TypeScript + Expo Router) do projeto Allivia — Etec de Tabo
 
 ## Autenticação por código de e-mail
 
-O aplicativo usa Supabase Auth para cadastro, confirmação do e-mail, recuperação de senha e verificação de identidade antes de alterar a senha no perfil. Configure o projeto seguindo o [manual de autenticação](docs/supabase-auth.txt). Os [modelos de e-mail](supabase/email-templates/) e a [galeria de prévia](supabase/email-templates/preview.html) usam a paleta do Allivia. Para regerar: `node scripts/gerar-emails.mjs`.
+O aplicativo usa Supabase Auth para cadastro, confirmação do e-mail, recuperação de senha e verificação de identidade antes de alterar a senha no perfil. Veja a [organização do Supabase](supabase/README.md). Para gerar os modelos de e-mail com a paleta do Allivia, execute `node scripts/gerar-emails.mjs`; os arquivos serão criados em `supabase/email-templates/`.
 
 ## Banco de dados
 
 O pacote atual está em [supabase/migrations/005_conteudo_pdf.sql](supabase/migrations/005_conteudo_pdf.sql), pronto para o SQL Editor. Inclui 35 receitas publicadas, sete restaurantes do PDF, a migração 006 e a exclusão dos oito restaurantes fictícios antigos. Esta é a única saída de `npm run gerar:conteudo`.
 
-- Banco novo: execute primeiro supabase/schema.sql e depois o pacote 005 completo. A migração 007 adiciona o armazenamento de avatares e deve ser aplicada quando ausente.
-- Banco existente com a estrutura atual do Allivia: execute somente o pacote 005 e a migração 007 quando ausente. Não execute novamente o schema nem migrações antigas já aplicadas; a 004 recria uma tabela de favoritos.
+- Banco novo: execute primeiro supabase/schema.sql e depois o pacote 005 completo, a migração 007 de avatares e a migração 009 de limpeza da receita antiga.
+- Banco existente com a estrutura atual do Allivia: execute somente o pacote 005 e as migrações 007 e 009 quando ausentes. Não execute novamente o schema nem migrações antigas já aplicadas; a 004 recria uma tabela de favoritos. Veja a [sequência de atualização](supabase/README.md).
 - Execute o SQL antes de abrir o app atualizado, que consulta os novos campos.
 - Para regerar, edite supabase/seed/conteudo-pdf.json e execute npm run gerar:conteudo. Edições editoriais feitas somente no banco podem ser sobrescritas.
 - Reexecutar atualiza os campos editoriais importados sem trocar os IDs ou favoritos. Se houver nomes duplicados no banco, a transação para com diagnóstico.
@@ -96,12 +96,12 @@ Os testes com React Query compartilham `test-utils/renderWithClient.tsx`, que de
 
 A migração 006, já incluída no pacote 005, protege a leitura das receitas por alergias também em favoritos e links diretos. Quem já importou o catálogo pode aplicar somente a 006 quando ausente. O cache do app é separado por conta e perfil alimentar. Favoritos incompatíveis ficam ocultos, sem exclusão automática.
 
-As 35 fotos disponíveis estão integradas ao app; as 13 receitas sem arquivo mantêm o ícone padrão. Veja [assets/recipe-photos/README.md](assets/recipe-photos/README.md). Os comandos são npm run fotos:verificar (local) e npm run fotos:enviar (upload administrativo opcional). A importação preserva imagens já cadastradas.
+As 35 fotos disponíveis estão integradas ao app; a migração 008, incluída no pacote 005, remove as 13 receitas antigas sem foto. Veja [assets/recipe-photos/README.md](assets/recipe-photos/README.md). Os comandos são npm run fotos:verificar (local) e npm run fotos:enviar (upload administrativo opcional). A importação preserva imagens já cadastradas.
 
 ## Pendências e validação no aparelho
 
-Recuperação de senha ainda precisa do retorno autenticado e da tela de nova senha. Premium usa assinatura simulada. A validação local não comprova migrações, permissões ou integração no Supabase remoto.
+Premium usa assinatura simulada. A validação local não comprova migrações, permissões ou integração no Supabase remoto.
 
 No aparelho, confira login, onboarding e persistência da sessão; busca, filtros, fotos, favoritos e bloqueio de receitas também por link direto; restaurantes e rotas com localização aceita e negada; scanner com câmera aceita e negada, código desconhecido e entrada manual; perfil, teclado, rolagem, textos grandes e reconexão de rede. Não use dados reais de cartão na demonstração.
 
-Compatibilidade online do Expo e exportação nativa ainda precisam de conferência; uma execução anterior de hermesc.exe falhou por permissão no ambiente Windows. Registre problemas com passos e resultado esperado/obtido, sem credenciais.
+A exportação Android com Hermes foi validada localmente. A compilação do APK/AAB, a compatibilidade das dependências com o serviço de build e os testes em aparelho ainda precisam de conferência. Registre problemas com passos e resultado esperado/obtido, sem credenciais.

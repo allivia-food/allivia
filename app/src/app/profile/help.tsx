@@ -26,6 +26,15 @@ export default function HelpScreen() {
       </Text>
       <Text style={typography.subtitle}>{HELP_HEALTH_NOTE}</Text>
       <Text style={[typography.subtitle, styles.emergency]}>{HELP_EMERGENCY}</Text>
+      <Text style={typography.sectionTitle} accessibilityRole="header">
+        {t.teamTitle}
+      </Text>
+      <Text style={typography.subtitle}>{t.teamInstitution}</Text>
+      {t.teamMembers.map((name) => (
+        <Text key={name} style={typography.subtitle}>
+          {name}
+        </Text>
+      ))}
     </TextScreen>
   );
 }

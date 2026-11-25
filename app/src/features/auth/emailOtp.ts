@@ -21,7 +21,15 @@ export function clearOtpCooldowns() {
 
 export class EmailOtpError extends Error {
   constructor(
-    public code: 'invalid_code' | 'proof_expired' | 'account_changed' | 'current_password_invalid',
+    public code:
+      | 'invalid_code'
+      | 'proof_expired'
+      | 'account_changed'
+      | 'current_password_invalid'
+      | 'password_check_connection'
+      | 'account_check_connection'
+      | 'email_send_connection'
+      | 'email_send_timeout',
   ) {
     super(code);
   }
@@ -29,6 +37,14 @@ export class EmailOtpError extends Error {
 
 export function emailOtpErrorMessage(error: unknown): string {
   const code = error && typeof error === 'object' && 'code' in error ? error.code : null;
+  if (code === 'password_check_connection')
+    return 'Não foi possível conectar para validar sua senha atual. Tente novamente.';
+  if (code === 'account_check_connection')
+    return 'Não foi possível conectar para confirmar sua conta antes de enviar o código. Tente novamente.';
+  if (code === 'email_send_connection')
+    return 'A conexão falhou ao solicitar o código por e-mail. Aguarde um minuto antes de tentar novamente.';
+  if (code === 'email_send_timeout')
+    return 'O envio do código demorou mais que o esperado. Confira seu e-mail e aguarde um minuto antes de tentar novamente.';
   if (
     [
       'otp_expired',

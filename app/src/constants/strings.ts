@@ -115,6 +115,7 @@ export const strings = {
     invalidChars: 'Use apenas letras, espaços, hífen e apóstrofo.',
   },
   customAllergyErrors: {
+    invalidChars: 'Informe o nome da alergia com letras e complementos válidos.',
     tooShort: 'Use pelo menos 2 caracteres.',
     tooLong: 'Use no máximo 40 caracteres.',
     duplicate: 'Essa alergia já está na lista.',
@@ -171,6 +172,15 @@ export const strings = {
   help: {
     title: 'Ajuda e Suporte',
     email: 'alliviafood@gmail.com',
+    teamTitle: 'Equipe Allivia',
+    teamInstitution: 'Etec de Taboão da Serra',
+    teamMembers: [
+      'Lavínia Manzan',
+      'Mirella Ferreira',
+      'Rihana Ferreira',
+      'Sophia Félix',
+      'Vicente da Silva',
+    ],
   },
   profileErrors: {
     wrongPassword: 'Senha atual incorreta.',
@@ -221,6 +231,7 @@ export const strings = {
     errors: {
       tooShort: 'Use pelo menos 2 caracteres.',
       tooLong: 'Use no máximo 30 caracteres.',
+      invalidChars: 'Informe o nome do ingrediente com letras e complementos válidos.',
       duplicate: 'Esse ingrediente já está na lista.',
       limit: 'Você pode adicionar até 5 ingredientes.',
     },
@@ -412,12 +423,12 @@ export const strings = {
     plans: {
       annual: {
         name: 'Plano Anual',
-        price: 'R$49,90/ano',
+        price: 'R$149,90/ano (aprox. R$12,50/mês)',
         renewal: 'Cobrança única. Renova automaticamente em 1 ano.',
       },
       monthly: {
         name: 'Plano Mensal',
-        price: 'R$9,90/mês',
+        price: 'R$14,90/mês',
         renewal: 'Renova automaticamente todo mês.',
       },
     },

@@ -11,6 +11,20 @@ import { TimeoutError } from '@/utils/withTimeout';
 const api = (code: string, status = 400) => new AuthApiError('technical message', status, code);
 
 describe('authErrorMessage', () => {
+  it.each(['Error sending confirmation email', 'Error sending recovery email'])(
+    'distinguishes SMTP failures from device connectivity: %s',
+    (message) => {
+      const error = new AuthRetryableFetchError(message, 500);
+      expect(authErrorKind(error)).toBe('emailDelivery');
+      expect(authErrorMessage(error)).toContain('Não foi possível enviar o e-mail');
+      expect(authErrorMessage(error)).not.toContain('internet');
+    },
+  );
+
+  it('classifies server failures separately from unreachable requests', () => {
+    expect(authErrorKind(new AuthRetryableFetchError('Service unavailable', 503))).toBe('server');
+    expect(authErrorKind(new AuthRetryableFetchError('Failed to fetch', 0))).toBe('network');
+  });
   it.each([
     ['invalid_credentials', 'E-mail ou senha incorretos.'],
     ['email_address_invalid', 'Informe um e-mail válido.'],
@@ -37,7 +51,9 @@ describe('authErrorMessage', () => {
 
   it('maps anything else to the generic message, never the technical text', () => {
     const generic = 'Algo deu errado. Tente novamente em instantes.';
-    expect(authErrorMessage(api('unexpected_failure', 500))).toBe(generic);
+    expect(authErrorMessage(api('unexpected_failure', 500))).toBe(
+      'O serviço de autenticação está indisponível no momento. Tente novamente em instantes.',
+    );
     expect(authErrorMessage(new Error('boom'))).toBe(generic);
     expect(authErrorMessage('string error')).toBe(generic);
     expect(authErrorMessage(api('invalid_credentials'))).not.toContain('technical');

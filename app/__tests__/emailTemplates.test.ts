@@ -1,8 +1,19 @@
 /** @jest-environment node */
-import { readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-const directory = join(process.cwd(), 'supabase/email-templates');
+let directory: string;
+
+beforeAll(() => {
+  directory = mkdtempSync(join(tmpdir(), 'allivia-emails-'));
+  execFileSync(process.execPath, [join(process.cwd(), 'scripts/gerar-emails.mjs'), directory]);
+});
+
+afterAll(() => {
+  if (directory) rmSync(directory, { recursive: true, force: true });
+});
 it.each(['confirm-signup', 'reset-password', 'magic-link'])(
   '%s keeps the real Supabase token and does not depend on external images or scripts',
   (name) => {

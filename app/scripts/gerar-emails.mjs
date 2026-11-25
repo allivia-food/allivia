@@ -1,14 +1,17 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { resolve } from 'node:path';
 import { format, resolveConfig } from 'prettier';
 
-const directory = new URL('../supabase/email-templates/', import.meta.url);
+const directory = process.argv[2]
+  ? resolve(process.argv[2])
+  : fileURLToPath(new URL('../supabase/email-templates/', import.meta.url));
 mkdirSync(directory, { recursive: true });
 const formatOptions = await resolveConfig(
   fileURLToPath(new URL('../package.json', import.meta.url)),
 );
 async function writeHtml(name, html) {
-  writeFileSync(new URL(name, directory), await format(html, { ...formatOptions, parser: 'html' }));
+  writeFileSync(resolve(directory, name), await format(html, { ...formatOptions, parser: 'html' }));
 }
 const templates = [
   {

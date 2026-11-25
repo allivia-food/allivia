@@ -13,6 +13,7 @@ import type { IconName } from '@/constants/icons';
 import { strings } from '@/constants/strings';
 import { colors, opacity, radius, shadows, sizes, spacing, typography } from '@/theme';
 import { EMAIL_MAX_LENGTH, PASSWORD_MAX_LENGTH } from '@/utils/validators';
+import { sanitizeTextInput, type TextInputKind } from '@/utils/textInput';
 
 import { Icon } from './Icon';
 
@@ -22,6 +23,7 @@ export interface InputProps extends Omit<TextInputProps, 'style' | 'editable'> {
   onPrimary?: boolean;
   disabled?: boolean;
   secure?: boolean;
+  inputKind?: TextInputKind;
   ref?: Ref<React.ComponentRef<typeof TextInput>>;
 }
 
@@ -36,6 +38,9 @@ export function Input({
   ref,
   accessibilityLabel,
   placeholder,
+  inputKind,
+  maxLength = secure ? PASSWORD_MAX_LENGTH : EMAIL_MAX_LENGTH,
+  onChangeText,
   ...rest
 }: InputProps) {
   const [focused, setFocused] = useState(false);
@@ -58,12 +63,23 @@ export function Input({
         ) : null}
         <TextInput
           ref={ref}
-          maxLength={secure ? PASSWORD_MAX_LENGTH : EMAIL_MAX_LENGTH}
+          maxLength={maxLength}
           maxFontSizeMultiplier={Platform.OS === 'android' ? 1.3 : undefined}
           autoCorrect={secure ? false : undefined}
           spellCheck={secure ? false : undefined}
           autoCapitalize={secure ? 'none' : undefined}
           {...rest}
+          onChangeText={(value) =>
+            onChangeText?.(
+              sanitizeTextInput(
+                value,
+                secure
+                  ? 'password'
+                  : (inputKind ?? (rest.keyboardType === 'email-address' ? 'email' : 'text')),
+                maxLength,
+              ),
+            )
+          }
           placeholder={placeholder}
           accessibilityLabel={accessibilityLabel ?? placeholder}
           accessibilityState={{ disabled }}

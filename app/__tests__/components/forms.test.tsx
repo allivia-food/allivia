@@ -3,6 +3,15 @@ import { fireEvent, render, screen } from '@testing-library/react-native';
 import { Checkbox, Input, ProgressSteps, SelectableTile } from '@/components/ui';
 
 describe('Input', () => {
+  it('filters pasted names before notifying the screen', async () => {
+    const onChangeText = jest.fn();
+    await render(
+      <Input placeholder="Nome" inputKind="name" maxLength={30} onChangeText={onChangeText} />,
+    );
+    await fireEvent.changeText(screen.getByLabelText('Nome'), 'Ana123! Silva');
+    expect(onChangeText).toHaveBeenCalledWith('Ana Silva');
+  });
+
   it('shows the error message below the field', async () => {
     await render(<Input placeholder="Email" error="Informe um e-mail válido." />);
     expect(screen.getByText('Informe um e-mail válido.')).toBeTruthy();
